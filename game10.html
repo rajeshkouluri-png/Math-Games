@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Fraction Lab</title>
+</head>
+<body>
+
+<div id="fraction-lab-container" style="background-color: #fffdfa; border-radius: 20px; border: 3px solid rgb(230, 126, 34); box-shadow: rgba(0, 0, 0, 0.15) 0px 10px 30px; font-family: 'Segoe UI', sans-serif; margin: 20px auto; max-width: 800px; padding: 20px;">
+    <h2 style="color: #d35400; text-align: center; margin-top: 0;">🍕 Interactive Fraction Lab</h2>
+    
+    <div style="background: rgb(253, 242, 233); border-radius: 15px; border: 1px solid rgb(250, 177, 160); display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 20px; padding: 20px;">
+        <div style="text-align: center;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Numerator (Parts)</label>
+            <input id="numInput" oninput="updateSimulation()" style="border-radius: 8px; border: 2px solid rgb(230, 126, 34); font-size: 1.2rem; padding: 10px; width: 80px; text-align: center;" type="number" value="5" min="0" />
+        </div>
+        <div style="color: #e67e22; font-size: 2.5rem; line-height: 1.8;">/</div>
+        <div style="text-align: center;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Denominator (Size)</label>
+            <input id="denInput" max="20" oninput="updateSimulation()" style="border-radius: 8px; border: 2px solid rgb(230, 126, 34); font-size: 1.2rem; padding: 10px; width: 80px; text-align: center;" type="number" value="4" min="1" />
+        </div>
+    </div>
+
+    <div id="status-bar" style="margin-bottom: 20px; text-align: center;">
+        <div id="fraction-type" style="background: rgb(230, 126, 34); border-radius: 50px; color: white; display: inline-block; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; padding: 10px 20px;">Proper Fraction</div>
+        <div id="mixed-value" style="color: #2c3e50; font-size: 1.3rem; font-weight: bold;"></div>
+    </div>
+
+    <div style="margin-top: 20px; text-align: left;">
+        <h4 style="border-bottom: 2px solid rgb(238, 238, 238); padding-bottom: 5px; color: #2c3e50;">Circular Model (Pizzas)</h4>
+        <div id="circle-area" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; min-height: 150px; padding: 10px;"></div>
+        
+        <h4 style="border-bottom: 2px solid rgb(238, 238, 238); margin-top: 30px; padding-bottom: 5px; color: #2c3e50;">Rectangular Model (Bars)</h4>
+        <div id="rect-area" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; min-height: 120px; padding: 10px;"></div>
+    </div>
+</div>
+
+<script>
+    function updateSimulation() {
+        const num = parseInt(document.getElementById('numInput').value) || 0;
+        const den = parseInt(document.getElementById('denInput').value) || 1;
+        
+        const typeEl = document.getElementById('fraction-type');
+        const mixedEl = document.getElementById('mixed-value');
+        
+        // 1. Determine Fraction Type and Math
+        const wholes = Math.floor(num / den);
+        const remainder = num % den;
+        const totalShapes = Math.ceil(num / den) || 1;
+
+        if (num === 0) {
+            typeEl.innerText = "Zero Fraction";
+            mixedEl.innerText = "0";
+        } else if (num < den) {
+            typeEl.innerText = "Proper Fraction";
+            mixedEl.innerText = `${num} / ${den}`;
+        } else if (num === den) {
+            typeEl.innerText = "Whole Number";
+            mixedEl.innerText = "1 Full Whole";
+        } else {
+            typeEl.innerText = "Improper / Mixed Fraction";
+            mixedEl.innerText = remainder === 0 ? `${wholes} Wholes` : `${wholes} Whole(s) and ${remainder}/${den}`;
+        }
+
+        // 2. Clear and Redraw Canvases
+        renderShapes('circle-area', totalShapes, num, den, drawCircle);
+        renderShapes('rect-area', totalShapes, num, den, drawRect);
+    }
+
+    function renderShapes(containerId, totalShapes, num, den, drawFn) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        
+        let remainingNum = num;
+
+        for (let i = 0; i < totalShapes; i++) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 150;
+            canvas.height = 150;
+            container.appendChild(canvas);
+            
+            const currentFill = Math.min(remainingNum, den);
+            drawFn(canvas, currentFill, den);
+            remainingNum -= currentFill;
+        }
+    }
+
+    function drawCircle(canvas, fill, den) {
+        const ctx = canvas.getContext('2d');
+        const cx = 75, cy = 75, r = 60;
+        
+        for (let i = 0; i < den; i++) {
+            const start = (i * 2 * Math.PI) / den - Math.PI / 2;
+            const end = ((i + 1) * 2 * Math.PI) / den - Math.PI / 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, start, end);
+            ctx.closePath();
+            
+            ctx.fillStyle = (i < fill) ? "#e67e22" : "#f0f0f0";
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+
+    function drawRect(canvas, fill, den) {
+        const ctx = canvas.getContext('2d');
+        const w = 120, h = 80;
+        const x = 15, y = 35;
+        
+        // Determine grid (best fit)
+        let cols = Math.ceil(Math.sqrt(den));
+        let rows = Math.ceil(den / cols);
+        const cellW = w / cols;
+        const cellH = h / rows;
+
+        let count = 0;
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (count >= den) break;
+                ctx.beginPath();
+                ctx.rect(x + c * cellW, y + r * cellH, cellW, cellH);
+                ctx.fillStyle = (count < fill) ? "#3498db" : "#f0f0f0";
+                ctx.fill();
+                ctx.strokeStyle = "#fff";
+                ctx.stroke();
+                count++;
+            }
+        }
+    }
+
+    // Initialize layout on load
+    window.onload = function() {
+        updateSimulation();
+    };
+</script>
+
+</body>
+</html>

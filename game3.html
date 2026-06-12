@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Place Value Block Lab</title>
+  <style>
+    #rajs-lab { 
+      font-family: 'Segoe UI', Arial, sans-serif; 
+      max-width: 650px; 
+      margin: 20px auto; 
+      padding: 25px; 
+      background: #ffffff; 
+      border: 4px solid #34495e; 
+      border-radius: 20px; 
+      text-align: center; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+    }
+    .target-display { 
+      font-size: 36px; 
+      font-weight: bold; 
+      color: #2c3e50; 
+      margin-bottom: 10px; 
+      background: #f1f2f6; 
+      padding: 10px; 
+      border-radius: 10px; 
+      display: inline-block; 
+      min-width: 150px; 
+    }
+    
+    .expansion-row { 
+      font-size: 22px; 
+      margin-bottom: 20px; 
+      color: #7f8c8d; 
+      font-family: monospace; 
+    }
+    .exp-num { 
+      color: #e67e22; 
+      font-weight: bold; 
+      border-bottom: 2px solid #e67e22; 
+      padding: 0 5px; 
+    }
+
+    .mat { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr 1fr; 
+      gap: 15px; 
+      margin-bottom: 20px; 
+    }
+    .zone { 
+      min-height: 180px; 
+      border: 3px solid #dcdde1; 
+      border-radius: 12px; 
+      background: #fff; 
+      cursor: pointer; 
+      transition: 0.3s; 
+      padding: 10px; 
+      display: flex; 
+      flex-wrap: wrap; 
+      align-content: flex-start; 
+      justify-content: center; 
+    }
+    .zone.active { 
+      border-color: #3498db; 
+      background: #ebf5fb; 
+      box-shadow: 0 0 10px rgba(52,152,219,0.2); 
+    }
+    .zone-label { 
+      font-weight: bold; 
+      margin-top: 8px; 
+      font-size: 13px; 
+      color: #34495e; 
+    }
+
+    /* Block UI */
+    .block-selector { 
+      display: flex; 
+      justify-content: center; 
+      gap: 20px; 
+      background: #f8f9fa; 
+      padding: 15px; 
+      border-radius: 15px; 
+      margin-top: 10px; 
+    }
+    .block-unit { 
+      cursor: pointer; 
+      padding: 10px; 
+      border: 2px solid transparent; 
+      border-radius: 10px; 
+      transition: 0.2s; 
+      text-align: center; 
+    }
+    .block-unit:hover { 
+      background: #e9ecef; 
+      border-color: #bdc3c7; 
+    }
+    
+    /* Visual Blocks */
+    .b100 { 
+      width: 40px; 
+      height: 40px; 
+      background: #e74c3c; 
+      border: 1px solid #c0392b; 
+      margin: 1px; 
+      display: grid; 
+      grid-template-columns: repeat(10,1fr); 
+    }
+    .b100 div { 
+      border: 0.1px solid rgba(255,255,255,0.2); 
+    }
+    .b10 { 
+      width: 8px; 
+      height: 40px; 
+      background: #3498db; 
+      border: 1px solid #2980b9; 
+      margin: 1px; 
+      display: grid; 
+      grid-template-rows: repeat(10,1fr); 
+    }
+    .b10 div { 
+      border: 0.1px solid rgba(255,255,255,0.2); 
+    }
+    .b1 { 
+      width: 10px; 
+      height: 10px; 
+      background: #27ae60; 
+      border: 1px solid #1e8449; 
+      margin: 1px; 
+    }
+
+    .btn-verify { 
+      background: #27ae60; 
+      color: white; 
+      border: none; 
+      padding: 15px 40px; 
+      font-size: 20px; 
+      border-radius: 50px; 
+      cursor: pointer; 
+      margin-top: 20px; 
+      font-weight: bold; 
+      box-shadow: 0 4px #1e8449; 
+    }
+    .btn-verify:active { 
+      transform: translateY(2px); 
+      box-shadow: 0 2px #1e8449; 
+    }
+    .btn-clear { 
+      background: #95a5a6; 
+      color: white; 
+      border: none; 
+      padding: 8px 15px; 
+      border-radius: 5px; 
+      cursor: pointer; 
+      margin-top: 10px; 
+      font-size: 12px; 
+    }
+  </style>
+</head>
+<body>
+
+<div id="rajs-lab">
+  <div class="target-display" id="target">---</div>
+  
+  <div class="expansion-row">
+    <span id="target-view">?</span> = 
+    <span class="exp-num" id="exp-h">0</span> + 
+    <span class="exp-num" id="exp-t">0</span> + 
+    <span class="exp-num" id="exp-o">0</span>
+  </div>
+
+  <div class="mat">
+    <div onclick="setZone('h')">
+      <div class="zone active" id="z-h"></div>
+      <div class="zone-label">HUNDREDS</div>
+    </div>
+    <div onclick="setZone('t')">
+      <div class="zone" id="z-t"></div>
+      <div class="zone-label">TENS</div>
+    </div>
+    <div onclick="setZone('o')">
+      <div class="zone" id="z-o"></div>
+      <div class="zone-label">ONES</div>
+    </div>
+  </div>
+
+  <div class="block-selector">
+    <div class="block-unit" onclick="addBlock(100)">
+      <div class="b100" id="preview-100" style="margin: auto;"></div>
+      <small>100 Block</small>
+    </div>
+    <div class="block-unit" onclick="addBlock(10)">
+      <div class="b10" id="preview-10" style="margin: auto;"></div>
+      <small>10 Block</small>
+    </div>
+    <div class="block-unit" onclick="addBlock(1)">
+      <div class="b1" style="margin: auto;"></div>
+      <small>1 Block</small>
+    </div>
+  </div>
+
+  <button class="btn-verify" onclick="verify()">CHECK MY ANSWER</button><br />
+  <button class="btn-clear" onclick="resetMat()">Clear Blocks</button>
+</div>
+
+<script>
+  let targetNum, selectedZone = 'h';
+  let counts = { h: 0, t: 0, o: 0 };
+
+  function init() {
+    // Generate a random 3-digit number (101 to 999)
+    targetNum = Math.floor(Math.random() * 899) + 101;
+    document.getElementById('target').innerText = targetNum;
+    document.getElementById('target-view').innerText = targetNum;
+    resetMat();
+  }
+
+  function setZone(z) {
+    selectedZone = z;
+    document.querySelectorAll('.zone').forEach(el => el.classList.remove('active'));
+    document.getElementById('z-' + z).classList.add('active');
+  }
+
+  function addBlock(val) {
+    // Validation: Ensure the block matches the zone
+    if(selectedZone === 'h' && val !== 100) { alert("Use Hundred Blocks in the Hundreds column!"); return; }
+    if(selectedZone === 't' && val !== 10) { alert("Use Ten Blocks in the Tens column!"); return; }
+    if(selectedZone === 'o' && val !== 1) { alert("Use One Blocks in the Ones column!"); return; }
+
+    if(counts[selectedZone] >= 9) return;
+    
+    counts[selectedZone]++;
+    const div = document.createElement('div');
+    div.className = val === 100 ? 'b100' : (val === 10 ? 'b10' : 'b1');
+    
+    if(val === 100) {
+      for(let i = 0; i < 100; i++) div.innerHTML += '<div></div>';
+    }
+    if(val === 10) {
+      for(let i = 0; i < 10; i++) div.innerHTML += '<div></div>';
+    }
+    
+    document.getElementById('z-' + selectedZone).appendChild(div);
+    updateExp();
+  }
+
+  function updateExp() {
+    document.getElementById('exp-h').innerText = counts.h * 100;
+    document.getElementById('exp-t').innerText = counts.t * 10;
+    document.getElementById('exp-o').innerText = counts.o;
+  }
+
+  function verify() {
+    let total = (counts.h * 100) + (counts.t * 10) + counts.o;
+    if(total === targetNum) {
+      alert("🌟 Excellent! You correctly showed that " + targetNum + " has " + counts.h + " hundreds, " + counts.t + " tens, and " + counts.o + " ones.");
+      init();
+    } else {
+      alert("Not quite right. You have shown " + total + ". Look at the expansion form and try again!");
+    }
+  }
+
+  function resetMat() {
+    counts = { h: 0, t: 0, o: 0 };
+    document.getElementById('z-h').innerHTML = '';
+    document.getElementById('z-t').innerHTML = '';
+    document.getElementById('z-o').innerHTML = '';
+    updateExp();
+  }
+
+  // Generate grid lines inside selector previews cleanly on load
+  window.onload = function() {
+    const preview100 = document.getElementById('preview-100');
+    const preview10 = document.getElementById('preview-10');
+    
+    for(let i = 0; i < 100; i++) preview100.innerHTML += '<div></div>';
+    for(let i = 0; i < 10; i++) preview10.innerHTML += '<div></div>';
+    
+    init();
+  };
+</script>
+
+</body>
+</html>

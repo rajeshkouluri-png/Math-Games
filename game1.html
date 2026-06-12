@@ -1,0 +1,1061 @@
+<div id="tugOfWarMathGame">
+  <style>
+    /* ====== BASIC LAYOUT & FRAME ====== */
+    #tugOfWarMathGame {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 960px;
+      margin: 20px auto;
+      box-sizing: border-box;
+    }
+
+    #tugOfWarMathGame * {
+      box-sizing: border-box;
+    }
+
+    .game-frame {
+      border-radius: 18px;
+      border: 2px solid #c3e6c3;
+      padding: 10px;
+      background: #ffffff;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .tug-header {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .tug-header h2 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+
+    .tug-header p {
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+      color: #444;
+    }
+
+    /* ====== SETTINGS ROW ====== */
+    .settings-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin: 6px 0 4px;
+      font-size: 0.85rem;
+    }
+
+    .settings-row label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #f7f7f7;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .settings-row select {
+      border-radius: 999px;
+      border: 1px solid #ccc;
+      padding: 2px 6px;
+      font-size: 0.8rem;
+      background: #fff;
+    }
+
+    /* ====== SCOREBOARD ====== */
+    .scoreboard {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 4px 0 2px;
+      font-size: 0.9rem;
+    }
+
+    .scoreboard span {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #f9f9f9;
+    }
+
+    .score-left {
+      border: 1px solid #cce0ff;
+    }
+
+    .score-right {
+      border: 1px solid #ffd0cc;
+    }
+
+    .round-indicator {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #555;
+      background: transparent;
+      padding: 0;
+    }
+
+    .round-indicator span {
+      background: transparent;
+      padding: 0;
+    }
+
+    .round-indicator-line {
+      display: block;
+    }
+
+    /* ====== MAIN LAYOUT ====== */
+    .tug-layout {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    /* Smaller calculators on sides */
+    .tug-side {
+      flex: 1 1 180px;
+      min-width: 170px;
+      max-width: 210px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    /* Larger center game area */
+    .tug-center {
+      flex: 0 0 360px;
+      max-width: 380px;
+      min-width: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px;
+    }
+
+    /* ====== CALCULATORS ====== */
+    .calculator {
+      background: linear-gradient(145deg, #f7f8fa, #e4e7ee);
+      border-radius: 14px;
+      padding: 6px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      height: 100%;
+    }
+
+    .calc-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .calc-header-left span {
+      background: #e1efff;
+      border-radius: 999px;
+      padding: 2px 10px;
+      border: 1px solid #b4d1ff;
+      color: #124a9b;
+    }
+
+    .calc-header-right span {
+      background: #ffe2dc;
+      border-radius: 999px;
+      padding: 2px 10px;
+      border: 1px solid #ffb8aa;
+      color: #a53a23;
+    }
+
+    .calc-display {
+      background: #15191f;
+      color: #e3ffcf;
+      border-radius: 8px;
+      padding: 4px 6px;
+      min-height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.4px;
+      text-align: center;
+    }
+
+    .calc-display.correct {
+      animation: flashCorrect 0.4s ease-out 0s 2 alternate;
+    }
+
+    .calc-display.incorrect {
+      animation: flashWrong 0.4s ease-out 0s 2 alternate;
+    }
+
+    @keyframes flashCorrect {
+      from { background: #15191f; }
+      to   { background: #295f1a; }
+    }
+
+    @keyframes flashWrong {
+      from { background: #15191f; }
+      to   { background: #5f1a1a; }
+    }
+
+    /* Vertical colored options */
+    .answers-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .answer-btn {
+      border-radius: 6px;
+      padding: 5px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      width: 100%;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s, opacity 0.12s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      color: #222;
+    }
+
+    .answers-grid .answer-btn:nth-child(1) {
+      background: #ffe9e3;
+      border: 1px solid #ffc9b8;
+    }
+
+    .answers-grid .answer-btn:nth-child(2) {
+      background: #e7f1ff;
+      border: 1px solid #c3d8ff;
+    }
+
+    .answers-grid .answer-btn:nth-child(3) {
+      background: #fef2ff;
+      border: 1px solid #f2c9ff;
+    }
+
+    .answer-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
+      opacity: 0.95;
+    }
+
+    .answer-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+      opacity: 1;
+    }
+
+    .answer-btn.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ====== TUG-OF-WAR AREA ====== */
+    .tug-rope-area {
+      width: 100%;
+      padding: 8px;
+      border-radius: 12px;
+      background: #e8fbe8;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tug-labels {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 0.75rem;
+      color: #555;
+    }
+
+    .tug-rope-track {
+      position: relative;
+      width: 100%;
+      height: 120px;
+      overflow: hidden;
+    }
+
+    .tug-rope-track::after {
+      content: "";
+      position: absolute;
+      bottom: 8px;
+      left: 5%;
+      right: 5%;
+      height: 2px;
+      background: #c6b8a3;
+      opacity: 0.8;
+    }
+
+    .tug-group {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 5%;
+      right: 5%;
+      transition: transform 0.35s ease-out;
+    }
+
+    .tug-rope-line {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: repeating-linear-gradient(
+        90deg,
+        #d0a774 0,
+        #d0a774 14px,
+        #c1935a 14px,
+        #c1935a 26px
+      );
+      border-radius: 999px;
+      transform: translateY(-50%);
+    }
+
+    .tug-flag {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 36px;
+      height: 36px;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .tug-flag-inner {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      border: 2px solid #333;
+      background: #fff7cc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .tug-team {
+      position: absolute;
+      top: 50%;
+      display: flex;
+      gap: 6px;
+      transform: translateY(-50%);
+    }
+
+    .tug-team-left {
+      left: 0;
+    }
+
+    .tug-team-right {
+      right: 0;
+      transform: translateY(-50%) scaleX(-1);
+    }
+
+    .tug-player {
+      position: relative;
+      width: 22px;
+      height: 46px;
+    }
+
+    .tug-player::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #ffcc99;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .tug-player::after {
+      content: "";
+      position: absolute;
+      top: 13px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 13px;
+      height: 18px;
+      border-radius: 4px;
+      background: #2f7de1;
+    }
+
+    .tug-team-right .tug-player::after {
+      background: #e25c3c;
+    }
+
+    .tug-player-arm {
+      position: absolute;
+      top: 20px;
+      left: 100%;
+      width: 8px;
+      height: 3px;
+      background: #333;
+      border-radius: 2px;
+      transform-origin: left center;
+    }
+
+    .tug-team-right .tug-player-arm {
+      left: auto;
+      right: 100%;
+      transform-origin: right center;
+    }
+
+    .tug-player-legs {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 10px;
+    }
+
+    .tug-player-legs::before,
+    .tug-player-legs::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      width: 4px;
+      height: 10px;
+      background: #333;
+      border-radius: 2px;
+      box-shadow: 0 2px 0 0 #111;
+    }
+
+    .tug-player-legs::before {
+      left: 1px;
+    }
+
+    .tug-player-legs::after {
+      right: 1px;
+    }
+
+    @keyframes pullLeft {
+      0%   { transform: translateY(-50%) rotate(0deg); }
+      35%  { transform: translateY(-50%) rotate(-10deg); }
+      70%  { transform: translateY(-50%) rotate(-5deg); }
+      100% { transform: translateY(-50%) rotate(0deg); }
+    }
+
+    @keyframes pullRight {
+      0%   { transform: translateY(-50%) scaleX(-1) rotate(0deg); }
+      35%  { transform: translateY(-50%) scaleX(-1) rotate(-10deg); }
+      70%  { transform: translateY(-50%) scaleX(-1) rotate(-5deg); }
+      100% { transform: translateY(-50%) scaleX(-1) rotate(0deg); }
+    }
+
+    .tug-team-left.pull-anim {
+      animation: pullLeft 0.35s ease-out;
+    }
+
+    .tug-team-right.pull-anim {
+      animation: pullRight 0.35s ease-out;
+    }
+
+    .tug-message {
+      font-size: 0.8rem;
+      text-align: center;
+      min-height: 18px;
+      color: #555;
+    }
+
+    .tug-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    .tug-controls button {
+      border-radius: 999px;
+      border: none;
+      padding: 5px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      background: #333;
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s;
+    }
+
+    .tug-controls button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+      background: #111;
+    }
+
+    .tug-controls button:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .winner-banner {
+      margin-top: 3px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      text-align: center;
+      background: #e8ffe3;
+      border: 1px solid #b1e59a;
+      color: #255017;
+      display: none;
+    }
+
+    .winner-banner.show {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .tug-center {
+        order: -1;
+      }
+    }
+  </style>
+
+  <div class="game-frame">
+    <div class="tug-header">
+      <h2>Math Tug-of-War</h2>
+      <p>Choose the operation and difficulty. Two players race to pull the rope with correct answers!</p>
+    </div>
+
+    <div class="settings-row">
+      <label>
+        Operation:
+        <select id="operationSelect">
+          <option value="add">Addition</option>
+          <option value="sub">Subtraction</option>
+          <option value="mul">Multiplication</option>
+        </select>
+      </label>
+      <label>
+        Difficulty:
+        <select id="difficultySelect">
+          <option value="simple">Simple (1-digit)</option>
+          <option value="hard">Hard (1- &amp; 2-digit)</option>
+        </select>
+      </label>
+      <label>
+        Game time:
+        <select id="timerSelect">
+          <option value="60">1 minute</option>
+          <option selected="" value="120">2 minutes</option>
+          <option value="180">3 minutes</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="scoreboard">
+      <span class="score-left">Left: <strong id="leftScore">0</strong></span>
+      <span class="round-indicator">
+        <span class="round-indicator-line">
+          Time left: <span id="gameTimerDisplay">--:--</span>
+        </span>
+        <span class="round-indicator-line">
+          Best of <span id="maxRoundsText">15</span> pulls
+        </span>
+      </span>
+      <span class="score-right">Right: <strong id="rightScore">0</strong></span>
+    </div>
+
+    <div class="tug-layout">
+      <div class="tug-side">
+        <div class="calculator" id="leftCalculator">
+          <div class="calc-header calc-header-left">
+            <span>Left Player</span>
+          </div>
+          <div class="calc-display" id="leftDisplay">Choose mode &amp; press "Start Game"</div>
+          <div class="answers-grid" id="leftAnswers"></div>
+        </div>
+      </div>
+
+      <div class="tug-center">
+        <div class="tug-rope-area">
+          <div class="tug-labels">
+            <span>⬅ Left Team</span>
+            <span>Right Team ➡</span>
+          </div>
+          <div class="tug-rope-track">
+            <div class="tug-group" id="tugGroup">
+              <div class="tug-rope-line"></div>
+
+              <div class="tug-team tug-team-left" id="teamLeft">
+                <div class="tug-player">
+                  <div class="tug-player-arm"></div>
+                  <div class="tug-player-legs"></div>
+                </div>
+                <div class="tug-player">
+                  <div class="tug-player-arm"></div>
+                  <div class="tug-player-legs"></div>
+                </div>
+                <div class="tug-player">
+                  <div class="tug-player-arm"></div>
+                  <div class="tug-player-legs"></div>
+                </div>
+              </div>
+
+              <div class="tug-team tug-team-right" id="teamRight">
+                <div class="tug-player">
+                  <div class="tug-player-arm"></div>
+                  <div class="tug-player-legs"></div>
+                </div>
+                <div class="tug-player">
+                  <div class="tug-player-arm"></div>
+                  <div class="tug-player-legs"></div>
+                </div>
+                <div class="tug-player">
+                  <div class="tug-player-arm"></div>
+                  <div class="tug-player-legs"></div>
+                </div>
+              </div>
+
+              <div class="tug-flag" id="tugFlag">
+                <div class="tug-flag-inner" id="flagInner">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="tug-message" id="tugMessage">
+            Select settings, then start the game.
+          </div>
+        </div>
+        <div class="tug-controls">
+          <button id="startGameBtn">Start Game</button>
+          <div class="winner-banner" id="winnerBanner"></div>
+        </div>
+      </div>
+
+      <div class="tug-side">
+        <div class="calculator" id="rightCalculator">
+          <div class="calc-header calc-header-right">
+            <span>Right Player</span>
+          </div>
+          <div class="calc-display" id="rightDisplay">Choose mode &amp; press "Start Game"</div>
+          <div class="answers-grid" id="rightAnswers"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var TOTAL_PULLS = 15;
+
+      var state = {
+        a: 0,
+        b: 0,
+        correct: 0,
+        position: 0,
+        maxPull: (TOTAL_PULLS - 1) / 2, // 7 pulls to win
+        leftScore: 0,
+        rightScore: 0,
+        questionActive: false,
+        correctTaken: false,
+        questionStartTime: 0,
+        operation: "add",    // "add" | "sub" | "mul"
+        difficulty: "simple",// "simple" | "hard"
+        gameOver: false
+      };
+
+      var leftDisplay = document.getElementById("leftDisplay");
+      var rightDisplay = document.getElementById("rightDisplay");
+      var leftAnswers = document.getElementById("leftAnswers");
+      var rightAnswers = document.getElementById("rightAnswers");
+      var tugGroup = document.getElementById("tugGroup");
+      var flagInner = document.getElementById("flagInner");
+      var tugMessage = document.getElementById("tugMessage");
+      var startGameBtn = document.getElementById("startGameBtn");
+      var leftScoreEl = document.getElementById("leftScore");
+      var rightScoreEl = document.getElementById("rightScore");
+      var winnerBanner = document.getElementById("winnerBanner");
+      var maxRoundsText = document.getElementById("maxRoundsText");
+      var teamLeft = document.getElementById("teamLeft");
+      var teamRight = document.getElementById("teamRight");
+      var operationSelect = document.getElementById("operationSelect");
+      var difficultySelect = document.getElementById("difficultySelect");
+      var timerSelect = document.getElementById("timerSelect");
+      var gameTimerDisplay = document.getElementById("gameTimerDisplay");
+
+      maxRoundsText.textContent = TOTAL_PULLS.toString();
+
+      var timerIntervalId = null;
+      var timerRemainingSec = 0;
+
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function shuffleArray(arr) {
+        for (var i = arr.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var tmp = arr[i];
+          arr[i] = arr[j];
+          arr[j] = tmp;
+        }
+        return arr;
+      }
+
+      function setAnswerButtonsDisabled(side, disabled) {
+        var container = side === "left" ? leftAnswers : rightAnswers;
+        var buttons = container.querySelectorAll(".answer-btn");
+        buttons.forEach(function (btn) {
+          btn.disabled = disabled;
+          if (disabled) btn.classList.add("disabled");
+          else btn.classList.remove("disabled");
+        });
+      }
+
+      function clearFlashClasses() {
+        leftDisplay.classList.remove("correct", "incorrect");
+        rightDisplay.classList.remove("correct", "incorrect");
+      }
+
+      function updateScores() {
+        leftScoreEl.textContent = state.leftScore;
+        rightScoreEl.textContent = state.rightScore;
+      }
+
+      function updateFlagPosition() {
+        var maxOffset = 40;
+        var step = maxOffset / state.maxPull;
+        var offset = state.position * step;
+        tugGroup.style.transform = "translateX(" + offset + "px)";
+        flagInner.textContent = state.position.toString();
+      }
+
+      function announceMessage(msg) {
+        tugMessage.textContent = msg;
+      }
+
+      function triggerPullAnimation(side) {
+        var team = side === "left" ? teamLeft : teamRight;
+        team.classList.add("pull-anim");
+        setTimeout(function () {
+          team.classList.remove("pull-anim");
+        }, 400);
+      }
+
+      function allButtonsDisabled() {
+        var buttons = [
+          ...leftAnswers.querySelectorAll(".answer-btn"),
+          ...rightAnswers.querySelectorAll(".answer-btn")
+        ];
+        if (buttons.length === 0) return false;
+        return buttons.every(function (btn) { return btn.disabled; });
+      }
+
+      function getOperationSymbol() {
+        if (state.operation === "add") return "+";
+        if (state.operation === "sub") return "-";
+        if (state.operation === "mul") return "x";
+        return "?";
+      }
+
+      function computeAnswer(a, b) {
+        if (state.operation === "add") return a + b;
+        if (state.operation === "sub") return a - b;
+        if (state.operation === "mul") return a * b;
+        return 0;
+      }
+
+      /* ====== TIMER FUNCTIONS ====== */
+      function readTimerDuration() {
+        var v = parseInt(timerSelect.value, 10);
+        if (isNaN(v) || v <= 0) v = 60;
+        return v;
+      }
+
+      function updateTimerDisplay() {
+        var m = Math.floor(timerRemainingSec / 60);
+        var s = timerRemainingSec % 60;
+        var mm = m < 10 ? "0" + m : "" + m;
+        var ss = s < 10 ? "0" + s : "" + s;
+        gameTimerDisplay.textContent = mm + ":" + ss;
+      }
+
+      function startTimer() {
+        if (timerIntervalId) {
+          clearInterval(timerIntervalId);
+          timerIntervalId = null;
+        }
+        timerRemainingSec = readTimerDuration();
+        updateTimerDisplay();
+
+        timerIntervalId = setInterval(function () {
+          if (state.gameOver) {
+            clearInterval(timerIntervalId);
+            timerIntervalId = null;
+            return;
+          }
+          timerRemainingSec--;
+          if (timerRemainingSec < 0) {
+            clearInterval(timerIntervalId);
+            timerIntervalId = null;
+            if (!state.gameOver) {
+              showDraw("Time's up! It's a draw.");
+            }
+          } else {
+            updateTimerDisplay();
+          }
+        }, 1000);
+      }
+
+      /* ====== QUESTION GENERATION ====== */
+      function generateQuestion() {
+        clearFlashClasses();
+        winnerBanner.classList.remove("show");
+
+        var min, max;
+        if (state.difficulty === "simple") {
+          min = 1; max = 9;
+        } else {
+          min = 1; max = 99;
+        }
+
+        if (state.operation === "mul") {
+          if (state.difficulty === "simple") {
+            state.a = randomInt(1, 9);
+            state.b = randomInt(1, 9);
+          } else {
+            state.a = randomInt(2, 12);
+            state.b = randomInt(2, 12);
+          }
+        } else {
+          state.a = randomInt(min, max);
+          state.b = randomInt(min, max);
+        }
+
+        if (state.operation === "sub" && state.a < state.b) {
+          var t = state.a;
+          state.a = state.b;
+          state.b = t;
+        }
+
+        state.correct = computeAnswer(state.a, state.b);
+        state.correctTaken = false;
+        state.questionActive = true;
+        state.questionStartTime = performance.now();
+
+        var symbol = getOperationSymbol();
+        var questionText = state.a + " " + symbol + " " + state.b + " = ?";
+        leftDisplay.textContent = questionText;
+        rightDisplay.textContent = questionText;
+
+        var options = [state.correct];
+        while (options.length < 3) {
+          var diff = randomInt(-5, 5);
+          var candidate = state.correct + diff;
+          if (candidate < 0) candidate = Math.abs(candidate);
+          if (candidate !== state.correct && options.indexOf(candidate) === -1) {
+            options.push(candidate);
+          }
+        }
+        shuffleArray(options);
+
+        renderAnswerButtons(leftAnswers, options, "left");
+        renderAnswerButtons(rightAnswers, options, "right");
+
+        setAnswerButtonsDisabled("left", false);
+        setAnswerButtonsDisabled("right", false);
+
+        announceMessage("Who will click the correct answer first?");
+      }
+
+      function renderAnswerButtons(container, options, side) {
+        container.innerHTML = "";
+        options.forEach(function (val) {
+          var btn = document.createElement("button");
+          btn.className = "answer-btn";
+          btn.textContent = val;
+          btn.addEventListener("click", function () {
+            handleAnswerClick(side, val);
+          });
+          container.appendChild(btn);
+        });
+      }
+
+      /* ====== ANSWER HANDLING ====== */
+      function handleAnswerClick(side, value) {
+        if (!state.questionActive || state.gameOver) return;
+
+        var display = side === "left" ? leftDisplay : rightDisplay;
+        var opponentDisplay = side === "left" ? rightDisplay : leftDisplay;
+        var symbol = getOperationSymbol();
+
+        var isCorrect = (value === state.correct);
+
+        display.textContent = state.a + " " + symbol + " " + state.b + " = " + state.correct;
+
+        if (!isCorrect) {
+          display.classList.remove("correct");
+          display.classList.add("incorrect");
+          setAnswerButtonsDisabled(side, true);
+          announceMessage(
+            (side === "left" ? "Left" : "Right") +
+            " chose wrong. The other player still has a chance!"
+          );
+
+          if (!state.correctTaken && allButtonsDisabled()) {
+            state.questionActive = false;
+            leftDisplay.textContent = state.a + " " + symbol + " " + state.b + " = " + state.correct;
+            rightDisplay.textContent = leftDisplay.textContent;
+            announceMessage(
+              "No one got it this time. The correct answer was " +
+              state.correct +
+              ". New question coming!"
+            );
+            setTimeout(generateQuestion, 900);
+          }
+
+          return;
+        }
+
+        if (state.correctTaken) return;
+
+        state.correctTaken = true;
+        state.questionActive = false;
+
+        display.classList.remove("incorrect");
+        display.classList.add("correct");
+        opponentDisplay.classList.remove("correct", "incorrect");
+
+        setAnswerButtonsDisabled("left", true);
+        setAnswerButtonsDisabled("right", true);
+
+        var timeTakenMs = Math.round(performance.now() - state.questionStartTime);
+        var timeTakenSec = (timeTakenMs / 1000).toFixed(2);
+
+        if (side === "left") {
+          state.position = Math.max(state.position - 1, -state.maxPull);
+          state.leftScore += 1;
+        } else {
+          state.position = Math.min(state.position + 1, state.maxPull);
+          state.rightScore += 1;
+        }
+
+        updateScores();
+        updateFlagPosition();
+        triggerPullAnimation(side);
+
+        announceMessage(
+          (side === "left" ? "Left player" : "Right player") +
+          " pulled the rope! (Answered in " +
+          timeTakenSec +
+          " s)"
+        );
+
+        checkForWinner();
+      }
+
+      /* ====== WIN / DRAW CHECK ====== */
+      function checkForWinner() {
+        if (state.position === -state.maxPull) {
+          showWinner("Left Player wins the tug-of-war! 🎉");
+        } else if (state.position === state.maxPull) {
+          showWinner("Right Player wins the tug-of-war! 🎉");
+        } else {
+          setTimeout(generateQuestion, 900);
+        }
+      }
+
+      function showWinner(text) {
+        if (timerIntervalId) {
+          clearInterval(timerIntervalId);
+          timerIntervalId = null;
+        }
+        winnerBanner.textContent = text + " Click \"Start Game\" to play again.";
+        winnerBanner.classList.add("show");
+        announceMessage("Game over! " + text);
+        state.questionActive = false;
+        state.gameOver = true;
+        setAnswerButtonsDisabled("left", true);
+        setAnswerButtonsDisabled("right", true);
+      }
+
+      function showDraw(text) {
+        if (timerIntervalId) {
+          clearInterval(timerIntervalId);
+          timerIntervalId = null;
+        }
+        winnerBanner.textContent = text + " Click \"Start Game\" to play again.";
+        winnerBanner.classList.add("show");
+        announceMessage(text);
+        state.questionActive = false;
+        state.gameOver = true;
+        setAnswerButtonsDisabled("left", true);
+        setAnswerButtonsDisabled("right", true);
+      }
+
+      /* ====== GAME RESET / START ====== */
+      function resetGame() {
+        state.position = 0;
+        state.leftScore = 0;
+        state.rightScore = 0;
+        state.questionActive = false;
+        state.correctTaken = false;
+        state.gameOver = false;
+
+        if (timerIntervalId) {
+          clearInterval(timerIntervalId);
+          timerIntervalId = null;
+        }
+
+        clearFlashClasses();
+        updateScores();
+        updateFlagPosition();
+        winnerBanner.classList.remove("show");
+
+        leftDisplay.textContent = "Get ready…";
+        rightDisplay.textContent = "Get ready…";
+
+        startTimer();
+
+        setTimeout(generateQuestion, 600);
+      }
+
+      operationSelect.addEventListener("change", function () {
+        state.operation = this.value;
+        resetGame();
+      });
+
+      difficultySelect.addEventListener("change", function () {
+        state.difficulty = this.value;
+        resetGame();
+      });
+
+      timerSelect.addEventListener("change", function () {
+        resetGame();
+      });
+
+      startGameBtn.addEventListener("click", function () {
+        resetGame();
+      });
+
+      updateFlagPosition();
+      gameTimerDisplay.textContent = "--:--";
+    })();
+  </script>
+</div>

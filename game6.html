@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3 Men &amp; 3 Monsters Puzzle</title>
+    <style>
+        #puzzle-container { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            max-width: 650px; 
+            margin: 20px auto; 
+            border: 4px solid #2c3e50; 
+            border-radius: 15px; 
+            background: #e1f5fe; 
+            text-align: center; 
+            overflow: hidden; 
+            position: relative; 
+            user-select: none;
+        }
+        .header-bar { 
+            background: #2c3e50; 
+            color: white; 
+            padding: 12px; 
+            font-size: 20px; 
+            font-weight: bold; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        
+        .game-world { 
+            display: flex; 
+            height: 260px; 
+            background: #4fc3f7; 
+            position: relative; 
+            border-bottom: 12px solid #5d4037; 
+        }
+        .bank { 
+            width: 75px; 
+            height: 100%; 
+            background: #388e3c; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 5; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3); 
+        }
+        .river { 
+            flex-grow: 1; 
+            position: relative; 
+            background: #0288d1; 
+        }
+        
+        #boat { 
+            width: 110px; 
+            height: 45px; 
+            background: #5d4037; 
+            border-radius: 0 0 50px 50px; 
+            position: absolute; 
+            bottom: 20px; 
+            transition: all 1s ease-in-out; 
+            cursor: pointer; 
+            border: 3px solid #3e2723; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 10; 
+        }
+        .at-left { left: 5px; }
+        .at-right { left: calc(100% - 115px); }
+
+        .person { 
+            font-size: 32px; 
+            cursor: pointer; 
+            margin: 2px; 
+            transition: 0.2s; 
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5)); 
+        }
+        
+        #win-screen { 
+            display: none; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(39, 174, 96, 0.95); 
+            z-index: 100; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            color: white; 
+        }
+        #win-screen h1 { font-size: 45px; margin: 0; text-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+        #win-screen p { font-size: 20px; margin: 15px 0; font-weight: bold; }
+
+        .panel { padding: 20px; background: #fff; border-top: 2px solid #eee; }
+        .btn-sail { background: #e64a19; color: white; border: none; padding: 12px 40px; font-size: 18px; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px #bf360c; }
+        .btn-sail:active { transform: translateY(2px); box-shadow: 0 2px #bf360c; }
+        .btn-restart { background: #7f8c8d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="puzzle-container">
+    <div id="win-screen">
+        <h1>BRILLIANT! 🌟</h1>
+        <p>Congratulations! You saved everyone!</p>
+        <button onclick="resetGame()" style="border-radius: 10px; border: none; cursor: pointer; font-weight: bold; padding: 10px 25px;">Play Again</button>
+    </div>
+
+    <div class="header-bar">
+        <span>3 Men &amp; 3 Monsters</span>
+        <span style="font-size: 12px;">Raj Classroom Logic Lab</span>
+    </div>
+    
+    <div class="game-world">
+        <div class="bank" id="left-bank"></div>
+        <div class="river">
+            <div class="at-left" id="boat"></div>
+        </div>
+        <div class="bank" id="right-bank"></div>
+    </div>
+
+    <div class="panel">
+        <button class="btn-sail" onclick="sail()">SAIL BOAT ⛵</button>
+        <button class="btn-restart" onclick="resetGame()">Restart</button>
+        <p style="color: #666666; font-size: 12px; margin-top: 10px;">Goal: Move all 6 to the right bank safely!</p>
+    </div>
+</div>
+
+<script>
+    let state = { left: { m: 3, x: 3 }, right: { m: 0, x: 0 }, boat: { m: 0, x: 0 }, side: 'left', moving: false };
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function beep(freq, type, dur) {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + dur);
+    }
+
+    function render() {
+        const lb = document.getElementById('left-bank');
+        const rb = document.getElementById('right-bank');
+        const bt = document.getElementById('boat');
+        lb.innerHTML = ''; rb.innerHTML = ''; bt.innerHTML = '';
+
+        for(let i=0; i<state.left.m; i++) lb.innerHTML += `<span class="person" onclick="toBoat('m','left')">👨</span>`;
+        for(let i=0; i<state.left.x; i++) lb.innerHTML += `<span class="person" onclick="toBoat('x','left')">👹</span>`;
+        for(let i=0; i<state.right.m; i++) rb.innerHTML += `<span class="person" onclick="toBoat('m','right')">👨</span>`;
+        for(let i=0; i<state.right.x; i++) rb.innerHTML += `<span class="person" onclick="toBoat('x','right')">👹</span>`;
+        for(let i=0; i<state.boat.m; i++) bt.innerHTML += `<span class="person" onclick="fromBoat('m')">👨</span>`;
+        for(let i=0; i<state.boat.x; i++) bt.innerHTML += `<span class="person" onclick="fromBoat('x')">👹</span>`;
+        bt.className = state.side === 'left' ? 'at-left' : 'at-right';
+    }
+
+    function toBoat(type, bank) {
+        if (state.side !== bank || state.moving || (state.boat.m + state.boat.x >= 2)) return;
+        state[bank][type]--; state.boat[type]++;
+        beep(400, 'sine', 0.1); render(); checkSafety();
+    }
+
+    function fromBoat(type) {
+        if (state.moving) return;
+        state.boat[type]--; state[state.side][type]++;
+        beep(600, 'sine', 0.1); render(); checkSafety();
+    }
+
+    function checkSafety() {
+        let sides = ['left', 'right'];
+        for (let s of sides) {
+            let mCount = state[s].m + (state.side === s ? state.boat.m : 0);
+            let xCount = state[s].x + (state.side === s ? state.boat.x : 0);
+            if (mCount > 0 && xCount > mCount) {
+                beep(150, 'sawtooth', 0.5);
+                setTimeout(() => { alert("Game Over! Monsters ate the Men."); resetGame(); }, 100);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function sail() {
+        if (state.moving || (state.boat.m + state.boat.x === 0)) return;
+        state.moving = true;
+        state.side = (state.side === 'left') ? 'right' : 'left';
+        beep(200, 'triangle', 0.8);
+        render();
+
+        setTimeout(() => {
+            state.moving = false;
+            if (checkSafety()) {
+                let totalRightM = state.right.m + state.boat.m;
+                let totalRightX = state.right.x + state.boat.x;
+                if (totalRightM === 3 && totalRightX === 3) {
+                    triggerWin();
+                }
+            }
+        }, 1050);
+    }
+
+    function triggerWin() {
+        beep(523, 'square', 0.2);
+        setTimeout(() => beep(659, 'square', 0.2), 150);
+        setTimeout(() => beep(783, 'square', 0.4), 300);
+        document.getElementById('win-screen').style.display = 'flex';
+    }
+
+    function resetGame() {
+        state = { left: { m: 3, x: 3 }, right: { m: 0, x: 0 }, boat: { m: 0, x: 0 }, side: 'left', moving: false };
+        document.getElementById('win-screen').style.display = 'none';
+        render();
+    }
+
+    render();
+</script>
+</body>
+</html>

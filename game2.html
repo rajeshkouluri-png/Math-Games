@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Math Balloon Game</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #e3f2fd; /* Light blue background */
+    }
+    #game-box {
+      width: 550px;
+      height: 350px;
+      border: 2px solid #ccc;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      position: relative;
+      overflow: hidden;
+      margin-top: 20px;
+      background-color: #bbdefb;
+    }
+    #question-label {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 10px;
+      color: #fff;
+      background-color: #1976d2; /* Vibrant blue */
+      padding: 6px 10px;
+      border-radius: 5px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+    }
+    #question {
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+      margin: 5px;
+      color: #fff;
+      background-color: #1565c0; /* Slightly darker blue */
+      padding: 10px;
+      border-radius: 5px;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    }
+    #timer {
+      font-size: 16px;
+      color: #d32f2f;
+      text-align: center;
+      margin-bottom: 5px;
+      background-color: rgba(255,255,255,0.8);
+      padding: 4px 8px;
+      border-radius: 5px;
+    }
+    #balloon-container {
+      position: relative;
+      width: 100%;
+      height: calc(100% - 100px);
+    }
+    .balloon {
+      width: 80px;
+      height: 120px;
+      position: absolute;
+      bottom: -150px;
+      border-radius: 50%;
+      text-align: center;
+      font-size: 24px;
+      line-height: 120px;
+      color: white;
+      cursor: pointer;
+      animation: rise 6s linear infinite;
+    }
+    .red { background: #e57373; }
+    .green { background: #81c784; }
+    .blue { background: #64b5f6; }
+    @keyframes rise {
+      0% { bottom: -150px; }
+      100% { bottom: 100%; }
+    }
+    #congrats {
+      display: none;
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 28px;
+      font-weight: bold;
+      color: #ff5722;
+      z-index: 999;
+      animation: pop 1s ease-out;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    @keyframes pop {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    canvas {
+      position: fixed;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+      z-index: 998;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-box">
+    <div id="question-label">Solve the math problem:</div>
+    <div id="question">Loading question...</div>
+    <div id="timer">Next question in 7 seconds...</div>
+    <div id="balloon-container"></div>
+    <div id="congrats">Congratulations!</div>
+  </div>
+  <canvas id="fireworks"></canvas>
+  <script>
+    const questionEl = document.getElementById("question");
+    const timerEl = document.getElementById("timer");
+    const container = document.getElementById("balloon-container");
+    const congratsEl = document.getElementById("congrats");
+    const canvas = document.getElementById("fireworks");
+    const ctx = canvas.getContext("2d");
+    let countdown;
+    let autoNext;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let fireworks = [];
+
+    function rand(min, max) {
+      return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    function generateQuestion() {
+      clearTimeout(autoNext);
+      clearInterval(countdown);
+      timerEl.textContent = "Next question in 7 seconds...";
+      let num1, num2, op, question, answer;
+      const ops = ["+", "-", "×"];
+      op = ops[rand(0, 2)];
+
+      if (op === "+") {
+        num1 = rand(1, 20);
+        num2 = rand(1, 20);
+        answer = num1 + num2;
+        question = `${num1} + ${num2} = ?`;
+      } else if (op === "-") {
+        num1 = rand(1, 20);
+        num2 = rand(1, num1);
+        answer = num1 - num2;
+        question = `${num1} - ${num2} = ?`;
+      } else if (op === "×") {
+        num1 = rand(1, 10);
+        num2 = rand(1, 10);
+        answer = num1 * num2;
+        question = `${num1} &times; ${num2} = ?`;
+      }
+
+      questionEl.innerHTML = question;
+      container.innerHTML = "";
+
+      let correctBalloon = rand(0, 2);
+      const answers = [];
+      for (let i = 0; i < 3; i++) {
+        let val;
+        if (i === correctBalloon) {
+          val = answer;
+        } else {
+          do {
+            val = answer + rand(-10, 10);
+          } while (val === answer || val < 0 || answers.includes(val));
+        }
+        answers.push(val);
+        const balloon = document.createElement("div");
+        balloon.className = `balloon ${["red", "green", "blue"][i]}`;
+        balloon.textContent = val;
+        balloon.style.left = `${20 + i * 30}%`;
+        container.appendChild(balloon);
+        balloon.onclick = () => {
+          if (val === answer) showCongrats();
+        };
+      }
+
+      let timeLeft = 7;
+      countdown = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Next question in ${timeLeft} second${timeLeft !== 1 ? 's' : ''}...`;
+        if (timeLeft <= 0) {
+          clearInterval(countdown);
+          generateQuestion();
+        }
+      }, 1000);
+    }
+
+    function showCongrats() {
+      clearTimeout(autoNext);
+      clearInterval(countdown);
+      congratsEl.style.display = "block";
+      launchFireworks();
+      setTimeout(() => {
+        congratsEl.style.display = "none";
+        fireworks = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        generateQuestion();
+      }, 3000);
+    }
+
+    function launchFireworks() {
+      for (let i = 0; i < 50; i++) {
+        fireworks.push({
+          x: rand(100, canvas.width - 100),
+          y: rand(100, canvas.height - 100),
+          radius: rand(2, 4),
+          color: `hsl(${rand(0, 360)}, 100%, 50%)`,
+          dx: rand(-4, 4),
+          dy: rand(-4, 4),
+          alpha: 1
+        });
+      }
+    }
+
+    function drawFireworks() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      fireworks.forEach((f, i) => {
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
+        ctx.fillStyle = f.color;
+        ctx.globalAlpha = f.alpha;
+        ctx.fill();
+        f.x += f.dx;
+        f.y += f.dy;
+        f.alpha -= 0.02;
+        if (f.alpha <= 0) fireworks.splice(i, 1);
+      });
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(drawFireworks);
+    }
+
+    window.onload = function() {
+      drawFireworks();
+      generateQuestion();
+    };
+  </script>
+</body>
+</html>

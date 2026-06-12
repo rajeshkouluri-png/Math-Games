@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Games Hub</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-user-select: none; /* టెక్స్ట్ సెలెక్ట్ అవ్వకుండా పిల్లల కోసం */
+            user-select: none;
+        }
+
+        h1 {
+            color: #2b2d42;
+            font-size: 24px;
+            margin-bottom: 25px;
+            text-align: center;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        /* 2 కాలమ్స్ స్క్వేర్ గ్రిడ్ సెటప్ */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 450px;
+            padding-bottom: 40px;
+        }
+
+        /* స్క్వేర్ బాక్సుల డిజైన్ */
+        .game-box {
+            text-decoration: none;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1; /* పర్ఫెక్ట్ స్క్వేర్ షేప్ కోసం */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.1s ease;
+            cursor: pointer;
+        }
+
+        /* నొక్కినప్పుడు చిన్నగా యానిమేషన్ */
+        .game-box:active {
+            transform: scale(0.95);
+        }
+
+        .game-box span {
+            font-size: 45px;
+            margin-bottom: 8px;
+        }
+
+        .game-box p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* పిల్లలకి నచ్చే క్యాండీ కలర్స్ (Bright Candy Colors) */
+        .color1 { background-color: #ff477e; color: white; }
+        .color2 { background-color: #4cc9f0; color: white; }
+        .color3 { background-color: #ffb703; color: white; }
+        .color4 { background-color: #72efdd; color: #111; }
+        .color5 { background-color: #b5179e; color: white; }
+        .color6 { background-color: #f72585; color: white; }
+        .color7 { background-color: #4ecdc4; color: white; }
+        .color8 { background-color: #ff6b6b; color: white; }
+        .color9 { background-color: #70e000; color: white; }
+        .color10 { background-color: #ff9f1c; color: white; }
+    </style>
+</head>
+<body>
+
+    <h1>Let's Play Maths! 🔢</h1>
+
+    <div class="grid-container">
+        <!-- గేమ్ 1 -->
+        <a href="game1/index.html" class="game-box color1">
+            <span>➕</span>
+            <p>Addition</p>
+        </a>
+
+        <!-- గేమ్ 2 -->
+        <a href="game2/index.html" class="game-box color2">
+            <span>➖</span>
+            <p>Subtraction</p>
+        </a>
+
+        <!-- గేమ్ 3 -->
+        <a href="game3/index.html" class="game-box color3">
+            <span>✖️</span>
+            <p>Multiplication</p>
+        </a>
+
+        <!-- గేమ్ 4 -->
+        <a href="game4/index.html" class="game-box color4">
+            <span>➗</span>
+            <p>Division</p>
+        </a>
+
+        <!-- గేమ్ 5 -->
+        <a href="game5/index.html" class="game-box color5">
+            <span>🎲</span>
+            <p>Counting</p>
+        </a>
+
+        <!-- గేమ్ 6 -->
+        <a href="game6/index.html" class="game-box color6">
+            <span>📊</span>
+            <p>Shapes</p>
+        </a>
+
+        <!-- గేమ్ 7 -->
+        <a href="game7/index.html" class="game-box color7">
+            <span>⏰</span>
+            <p>Time Game</p>
+        </a>
+
+        <!-- గేమ్ 8 -->
+        <a href="game8/index.html" class="game-box color8">
+            <span>🧩</span>
+            <p>Puzzles</p>
+        </a>
+
+        <!-- గేమ్ 9 -->
+        <a href="game9/index.html" class="game-box color9">
+            <span>📏</span>
+            <p>Measurement</p>
+        </a>
+
+        <!-- గేమ్ 10 -->
+        <a href="game10/index.html" class="game-box color10">
+            <span>🎈</span>
+            <p>Number Fun</p>
+        </a>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Virtual Soroban Abacus</title>
+  <style>
+    /* --- MAIN LAYOUT --- */
+    .abacus-wrapper {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #ffffff;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 650px;
+      margin: 20px auto;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* --- TABS --- */
+    .mode-tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #eee;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+      color: #555;
+      border-bottom: 4px solid transparent;
+      transition: all 0.3s;
+    }
+    .tab-btn:hover { color: #007bff; }
+    .tab-btn.active {
+      color: #007bff;
+      border-bottom: 4px solid #007bff;
+    }
+
+    /* --- HEADER & DISPLAY --- */
+    .abacus-header {
+      margin-bottom: 20px;
+      background: #e3f2fd;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #bbdefb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .question-label { 
+      font-size: 14px; font-weight: bold; color: #555; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;
+    }
+    
+    /* MATH DISPLAY AREA */
+    .math-display-area {
+      background: white;
+      padding: 15px 30px;
+      border-radius: 8px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+      margin-bottom: 10px;
+      min-height: 80px;
+      min-width: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .big-number {
+      font-size: 48px; font-weight: bold; color: #1565c0; letter-spacing: 2px;
+    }
+
+    /* Vertical Stack Math */
+    .vertical-math {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 36px;
+      font-weight: bold;
+      color: #333;
+      text-align: right;
+      line-height: 1.2;
+      display: inline-block;
+    }
+
+    .math-row {
+      display: flex;
+      justify-content: flex-end;
+      padding: 2px 5px;
+    }
+    
+    .op-col {
+      display: inline-block;
+      width: 30px;
+      text-align: center;
+      margin-right: 5px;
+      color: #1565c0;
+    }
+
+    .last-row {
+      border-bottom: 3px solid #333;
+    }
+
+    /* --- BUTTONS --- */
+    .btn {
+      padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;
+      transition: transform 0.1s, background 0.2s; margin: 5px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn-primary { background-color: #1976d2; color: white; } .btn-primary:hover { background-color: #1565c0; }
+    .btn-warning { background-color: #ff9800; color: white; }
+    .btn-success { background-color: #43a047; color: white; }
+    .icon-btn { background: #fff; border: 1px solid #ccc; font-size: 20px; width: 40px; height: 40px; padding: 0; color: #333; border-radius: 50%; }
+
+    /* --- ABACUS FRAME --- */
+    .abacus-frame {
+      background-color: #5d4037; padding: 10px 15px; border-radius: 8px; display: inline-block; position: relative; border: 4px solid #3e2723;
+    }
+    .rods-container {
+      display: flex; justify-content: center; background-color: #fff8e1; padding: 15px 20px; border-radius: 4px; position: relative;
+    }
+    .beam {
+      position: absolute; top: 100px; left: 0; right: 0; height: 10px; background-color: #3e2723; z-index: 5;
+    }
+    .rod {
+      width: 55px; height: 320px; position: relative; margin: 0 4px; display: flex; flex-direction: column; align-items: center;
+    }
+    .rod::before {
+      content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 6px; background: linear-gradient(90deg, #bdbdbd, #e0e0e0, #9e9e9e); transform: translateX(-50%); z-index: 0;
+    }
+    .rod-label {
+      position: absolute; bottom: -35px; font-weight: bold; color: #5d4037; background: #efebe9; padding: 2px 8px; border-radius: 4px; font-size: 14px;
+    }
+
+    /* --- BEADS --- */
+    .bead {
+      width: 48px; height: 30px; background: radial-gradient(circle at 30% 30%, #ff7043, #d84315); border-radius: 50px / 30px;
+      position: absolute; z-index: 10; cursor: pointer; transition: top 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+    }
+    .bead-heaven { top: 10px; } .bead-heaven.active { top: 60px; }
+    .bead-earth-1 { top: 140px; } .bead-earth-2 { top: 175px; } .bead-earth-3 { top: 210px; } .bead-earth-4 { top: 245px; }
+    .bead-earth-1.active { top: 110px; } .bead-earth-2.active { top: 145px; } .bead-earth-3.active { top: 180px; } .bead-earth-4.active { top: 215px; }
+
+    /* --- RESULTS & CANVAS --- */
+    .result-area { margin-top: 15px; font-size: 18px; font-weight: bold; min-height: 30px; padding: 10px; border-radius: 5px; }
+    .correct { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .wrong { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+    #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+  </style>
+</head>
+<body>
+
+<div class="abacus-wrapper">
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="mode-tabs">
+    <button class="tab-btn active" onclick="setMode('number', this)">Number Formation</button>
+    <button class="tab-btn" onclick="setMode('simple', this)">Simple Math</button>
+    <button class="tab-btn" onclick="setMode('hard', this)">Hard Math</button>
+  </div>
+
+  <div class="abacus-header">
+    <div class="question-label" id="qLabel">Form this Number</div>
+    <div class="math-display-area" id="targetDisplay"></div>
+    <div style="margin-top: 10px;">
+       <button class="btn btn-primary" onclick="generateChallenge()">
+          <span>🔄</span> New Question
+       </button>
+       <button class="btn icon-btn" onclick="speakChallenge()" title="Read Aloud">🔊</button>
+    </div>
+  </div>
+
+  <div class="abacus-frame">
+    <div class="beam"></div>
+    <div class="rods-container" id="abacusRods"></div>
+  </div>
+
+  <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px;">
+    <button class="btn btn-warning" onclick="clearBeads()">
+        <span>🧹</span> Clear
+    </button>
+    <button class="btn btn-success" onclick="checkAnswer()">
+        <span>✅</span> Check Answer
+    </button>
+  </div>
+
+  <div class="result-area" id="resultMessage"></div>
+</div>
+
+<script>
+  // --- CONFIGURATION ---
+  let currentMode = 'number'; // number, simple, hard
+  let targetValue = 0;
+  let currentAudioText = "";
+  const numRods = 4; // Th, H, T, O
+  const rodValues = [0, 0, 0, 0]; 
+
+  // --- INIT ---
+  function initAbacus() {
+    const container = document.getElementById('abacusRods');
+    container.innerHTML = '';
+    const labels = ['Th', 'H', 'T', 'O'];
+
+    for (let i = 0; i < numRods; i++) {
+      let rodDiv = document.createElement('div');
+      rodDiv.className = 'rod';
+      let label = document.createElement('div');
+      label.className = 'rod-label';
+      label.innerText = labels[i];
+      rodDiv.appendChild(label);
+      
+      let heavenBead = document.createElement('div');
+      heavenBead.className = 'bead bead-heaven';
+      heavenBead.onclick = () => toggleHeaven(i, heavenBead);
+      rodDiv.appendChild(heavenBead);
+      
+      for (let j = 1; j <= 4; j++) {
+        let earthBead = document.createElement('div');
+        earthBead.className = `bead bead-earth-${j}`;
+        earthBead.onclick = () => toggleEarth(i, j);
+        rodDiv.appendChild(earthBead);
+      }
+      container.appendChild(rodDiv);
+    }
+  }
+
+  // --- MODE SWITCHING ---
+  function setMode(mode, btn) {
+    currentMode = mode;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const labels = {
+      'number': 'Show this Number on Abacus',
+      'simple': 'Simple Math (1-Digit Ops)',
+      'hard': 'Hard Math (Mixed Ops)'
+    };
+    document.getElementById('qLabel').innerText = labels[mode];
+    generateChallenge();
+  }
+
+  // --- LOGIC: GENERATE CHALLENGES ---
+  function generateChallenge() {
+    document.getElementById('resultMessage').innerText = "";
+    document.getElementById('resultMessage').className = "result-area";
+    clearBeads();
+    const display = document.getElementById('targetDisplay');
+
+    if (currentMode === 'number') {
+      targetValue = Math.floor(Math.random() * 9999) + 1;
+      currentAudioText = targetValue.toString();
+      display.innerHTML = `<div class="big-number">${targetValue}</div>`;
+    } 
+    else {
+      // MATH MODES (Simple & Hard)
+      let rows = [];
+      let count = Math.random() < 0.5 ? 3 : 4; 
+      let runningTotal = 0;
+      let valid = false;
+      let attempts = 0;
+
+      while (!valid && attempts < 100) {
+          rows = [];
+          runningTotal = 0;
+          
+          // Row 1: Always a double digit start (10-60)
+          let n1 = Math.floor(Math.random() * 50) + 10;
+          rows.push({ val: n1, sign: '+' });
+          runningTotal = n1;
+
+          // Subsequent Rows
+          for (let i = 1; i < count; i++) {
+              let n;
+              if (currentMode === 'simple') {
+                 // Simple Mode: ONLY Single digits (1-9)
+                 n = Math.floor(Math.random() * 9) + 1;
+              } else {
+                 // Hard Mode: Mix of Single (1-9) and Double (10-30)
+                 let isSingle = Math.random() < 0.5;
+                 if(isSingle) n = Math.floor(Math.random() * 9) + 1;
+                 else n = Math.floor(Math.random() * 20) + 10; 
+              }
+
+              let sign = Math.random() < 0.5 ? '+' : '-';
+              // Prevent negative intermediate results
+              if (runningTotal - n < 0) sign = '+'; 
+              
+              if (sign === '+') runningTotal += n; else runningTotal -= n;
+              rows.push({ val: n, sign: sign });
+          }
+          // Final check: Result must be between 0 and 99
+          if (runningTotal >= 0 && runningTotal <= 99) valid = true;
+          attempts++;
+      }
+
+      // Fallback
+      if (!valid) { rows = [{val:25, sign:'+'}, {val:2, sign:'-'}, {val:1, sign:'+'}]; runningTotal = 24; }
+
+      targetValue = runningTotal;
+
+      // Audio
+      currentAudioText = rows.map((r, i) => {
+          if (i === 0) return r.val.toString();
+          return (r.sign === '+' ? "plus " : "minus ") + r.val;
+      }).join(", ");
+
+      // Display
+      let htmlStack = '<div class="vertical-math">';
+      rows.forEach((r, i) => {
+         let visSign = i === 0 ? '&nbsp;' : r.sign;
+         let visVal = r.val < 10 ? '0' + r.val : r.val; // Leading zero
+         let rowClass = (i === rows.length - 1) ? 'math-row last-row' : 'math-row';
+         
+         htmlStack += `
+          <div class="${rowClass}">
+            <span class="op-col">${visSign}</span>${visVal}
+          </div>`;
+      });
+      htmlStack += '</div>';
+      display.innerHTML = htmlStack;
+    }
+
+    speakChallenge();
+  }
+
+  function speakChallenge() {
+    if(!currentAudioText) return;
+    window.speechSynthesis.cancel();
+    let utterance = new SpeechSynthesisUtterance(currentAudioText);
+    utterance.rate = 0.85; 
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // --- ABACUS MECHANICS ---
+  function toggleHeaven(rodIndex, element) {
+    element.classList.toggle('active'); calculateRodValue(rodIndex);
+  }
+  function toggleEarth(rodIndex, beadPos) {
+    const rodDiv = document.getElementsByClassName('rod')[rodIndex];
+    let clickedBead = rodDiv.querySelector(`.bead-earth-${beadPos}`);
+    if (!clickedBead.classList.contains('active')) {
+      for (let k = 1; k <= beadPos; k++) rodDiv.querySelector(`.bead-earth-${k}`).classList.add('active');
+    } else {
+      for (let k = beadPos; k <= 4; k++) rodDiv.querySelector(`.bead-earth-${k}`).classList.remove('active');
+    }
+    calculateRodValue(rodIndex);
+  }
+  function calculateRodValue(rodIndex) {
+    const rodDiv = document.getElementsByClassName('rod')[rodIndex];
+    let val = 0;
+    if (rodDiv.querySelector('.bead-heaven').classList.contains('active')) val += 5;
+    for (let k = 1; k <= 4; k++) {
+      if (rodDiv.querySelector(`.bead-earth-${k}`).classList.contains('active')) val += 1;
+    }
+    rodValues[rodIndex] = val;
+  }
+  function clearBeads() {
+    document.querySelectorAll('.bead').forEach(b => b.classList.remove('active'));
+    rodValues.fill(0);
+  }
+  function checkAnswer() {
+    let userSum = (rodValues[0] * 1000) + (rodValues[1] * 100) + (rodValues[2] * 10) + (rodValues[3] * 1);
+    let msgDiv = document.getElementById('resultMessage');
+    if (userSum === targetValue) {
+      msgDiv.innerHTML = `🎉 Correct! The answer is ${targetValue}`;
+      msgDiv.className = "result-area correct";
+      fireConfetti();
+      let win = new SpeechSynthesisUtterance("Correct!"); window.speechSynthesis.speak(win);
+    } else {
+      msgDiv.innerHTML = `Try Again. Your abacus shows <b>${userSum}</b>.`;
+      msgDiv.className = "result-area wrong";
+    }
+  }
+
+  function fireConfetti() {
+    const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d');
+    canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight;
+    const particles = []; const colors = ['#f44336', '#9c27b0', '#3f51b5', '#00bcd4', '#4CAF50', '#FFEB3B', '#FF9800'];
+    for (let i = 0; i < 150; i++) particles.push({
+        x: canvas.width / 2, y: canvas.height / 2, w: Math.random() * 10 + 5, h: Math.random() * 10 + 5,
+        color: colors[Math.floor(Math.random() * colors.length)], vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20, gravity: 0.5, drag: 0.96
+      });
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); let active = false;
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += p.gravity; p.vx *= p.drag; p.vy *= p.drag;
+        if (p.y < canvas.height && p.x > 0 && p.x < canvas.width) { active = true; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.w, p.h); }
+      });
+      if (active) requestAnimationFrame(render);
+    }
+    render();
+  }
+
+  initAbacus();
+  generateChallenge();
+</script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Place Value Explorer</title>
+</head>
+<body>
+
+<div id="place-value-tool" style="background-color: white; border-radius: 15px; border: 3px solid rgb(44, 62, 80); box-shadow: rgba(0, 0, 0, 0.15) 0px 10px 30px; font-family: 'Segoe UI', Arial, sans-serif; margin: 20px auto; max-width: 650px; padding: 20px;">
+    <h2 style="color: #2c3e50; font-size: 24px; margin-top: 0px; text-align: center;">🔢 Place Value Explorer</h2>
+    
+    <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+        <input id="numInput" style="border-radius: 8px; border: 2px solid rgb(52, 152, 219); flex: 1 1 0%; font-size: 18px; outline: none; padding: 12px;" type="number" placeholder="Enter a number..." />
+        <button onclick="generatePlaceValue()" style="background-color: #27ae60; border-radius: 8px; border: none; color: white; cursor: pointer; font-size: 16px; font-weight: bold; padding: 12px 20px;">Show</button>
+    </div>
+
+    <div id="outputArea" style="display: none;">
+        <div style="background: rgb(255, 252, 249); border-radius: 12px; border: 2px solid rgb(230, 126, 34); margin-bottom: 25px; padding: 15px;">
+            <div style="align-items: center; border-bottom: 2px solid rgb(230, 126, 34); display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 8px;">
+                <h3 style="color: #d35400; font-size: 18px; margin: 0px;">Indian System</h3>
+                <span id="indianCommaNum" style="background: rgb(230, 126, 34); border-radius: 15px; color: white; font-size: 16px; font-weight: bold; padding: 2px 10px;"></span>
+            </div>
+            <div id="indianTable" style="display: flex; flex-direction: row-reverse; gap: 5px; justify-content: flex-start; margin: 10px 0px; overflow-x: auto; padding-bottom: 5px;"></div>
+            <p style="font-size: 15px; margin: 15px 0px 8px; text-align: left;"><strong>In Words:</strong> <span id="indianWordsText" style="color: #444444;"></span></p>
+            <div style="background: rgb(255, 244, 230); border-radius: 8px; border: 1px dashed rgb(230, 126, 34); padding: 10px; text-align: left;">
+                <strong style="color: #d35400; font-size: 15px;">Expansion:</strong><br />
+                <span id="indianExpandText" style="color: black; font-family: 'Courier New', monospace; font-size: 18px; font-weight: 800; line-height: 1.8;"></span>
+            </div>
+        </div>
+
+        <div style="background: rgb(247, 251, 255); border-radius: 12px; border: 2px solid rgb(41, 128, 185); padding: 15px;">
+            <div style="align-items: center; border-bottom: 2px solid rgb(41, 128, 185); display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 8px;">
+                <h3 style="color: #2471a3; font-size: 18px; margin: 0px;">International System</h3>
+                <span id="interCommaNum" style="background: rgb(41, 128, 185); border-radius: 15px; color: white; font-size: 16px; font-weight: bold; padding: 2px 10px;"></span>
+            </div>
+            <div id="interTable" style="display: flex; flex-direction: row-reverse; gap: 5px; justify-content: flex-start; margin: 10px 0px; overflow-x: auto; padding-bottom: 5px;"></div>
+            <p style="font-size: 15px; margin: 15px 0px 8px; text-align: left;"><strong>In Words:</strong> <span id="interWordsText" style="color: #444444;"></span></p>
+            <div style="background: rgb(238, 247, 255); border-radius: 8px; border: 1px dashed rgb(41, 128, 185); padding: 10px; text-align: left;">
+                <strong style="color: #2471a3; font-size: 15px;">Expansion:</strong><br />
+                <span id="interExpandText" style="color: black; font-family: 'Courier New', monospace; font-size: 18px; font-weight: 800; line-height: 1.8;"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const COLOR_MAP = {
+    "ones": "#7f8c8d", "thousands": "#27ae60", "lakhs": "#e67e22", 
+    "crores": "#c0392b", "millions": "#8e44ad", "billions": "#2c3e50"
+};
+
+function generatePlaceValue() {
+    const input = document.getElementById('numInput').value;
+    if (!input || input < 0) return;
+    
+    document.getElementById('outputArea').style.display = 'block';
+    const num = parseInt(input);
+    const digits = input.split('');
+
+    document.getElementById('indianCommaNum').innerText = num.toLocaleString('en-IN');
+    document.getElementById('interCommaNum').innerText = num.toLocaleString('en-US');
+
+    const indL = [
+        {l: "Ones", p: "ones"}, {l: "Tens", p: "ones"}, {l: "Hun", p: "ones"},
+        {l: "Tho", p: "thousands"}, {l: "T-Th", p: "thousands"},
+        {l: "Lakh", p: "lakhs"}, {l: "T-Lk", p: "lakhs"},
+        {l: "Cr", p: "crores"}, {l: "T-Cr", p: "crores"}
+    ];
+    const indV = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000];
+    
+    const intL = [
+        {l: "Ones", p: "ones"}, {l: "Tens", p: "ones"}, {l: "Hun", p: "ones"},
+        {l: "Tho", p: "thousands"}, {l: "T-Th", p: "thousands"}, {l: "H-Th", p: "thousands"},
+        {l: "Mil", p: "millions"}, {l: "T-Mi", p: "millions"}, {l: "H-Mi", p: "millions"},
+        {l: "Bil", p: "billions"}
+    ];
+    const intV = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000];
+
+    renderCompactBoxes('indianTable', digits, indL);
+    document.getElementById('indianWordsText').innerText = toIndianWords(num);
+    document.getElementById('indianExpandText').innerHTML = getExpansion(digits, indV, 'en-IN');
+
+    renderCompactBoxes('interTable', digits, intL);
+    document.getElementById('interWordsText').innerText = toInternationalWords(num);
+    document.getElementById('interExpandText').innerHTML = getExpansion(digits, intV, 'en-US');
+}
+
+function renderCompactBoxes(containerId, digits, labels) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const revDigits = [...digits].reverse();
+    
+    for (let i = 0; i < digits.length; i++) {
+        const box = document.createElement('div');
+        const labelData = labels[i] || {l: "High", p: "billions"};
+        const bgColor = COLOR_MAP[labelData.p];
+
+        box.style.cssText = `border: 1.5px solid ${bgColor}; min-width: 45px; text-align: center; border-radius: 4px; background: white; flex-shrink: 0;`;
+        
+        const label = document.createElement('div');
+        label.innerText = labelData.l;
+        label.style.cssText = `font-size: 9px; background: ${bgColor}; color: white; padding: 2px 1px; font-weight: bold; text-transform: uppercase;`;
+        
+        const val = document.createElement('div');
+        val.innerText = revDigits[i];
+        val.style.cssText = "font-size: 18px; font-weight: bold; padding: 4px; color: #333;";
+        
+        box.appendChild(label);
+        box.appendChild(val);
+        container.appendChild(box);
+    }
+}
+
+function getExpansion(digits, values, locale) {
+    let result = [];
+    const revDigits = [...digits].reverse();
+    const xSymbol = "×"; 
+    for (let i = digits.length - 1; i >= 0; i--) {
+        if (revDigits[i] !== "0") {
+            let formattedVal = values[i].toLocaleString(locale);
+            result.push("(" + revDigits[i] + " " + xSymbol + " " + formattedVal + ")");
+        }
+    }
+    return result.join(' + ');
+}
+
+function toIndianWords(num) {
+    if (num === 0) return 'Zero';
+    const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    function makeWords(n) {
+        if (n < 20) return a[n];
+        if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+        if (n < 1000) return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + makeWords(n % 100) : '');
+        return '';
+    }
+    let str = '';
+    const crore = Math.floor(num / 10000000); let r = num % 10000000;
+    const lakh = Math.floor(r / 100000); r %= 100000;
+    const thousand = Math.floor(r / 1000); r %= 1000;
+    if (crore > 0) str += makeWords(crore) + ' Crore ';
+    if (lakh > 0) str += makeWords(lakh) + ' Lakh ';
+    if (thousand > 0) str += makeWords(thousand) + ' Thousand ';
+    if (r > 0) str += makeWords(r);
+    return str.trim();
+}
+
+function toInternationalWords(num) {
+    if (num === 0) return 'Zero';
+    const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    function makeWords(n) {
+        if (n < 20) return a[n];
+        if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+        if (n < 1000) return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + makeWords(n % 100) : '');
+        return '';
+    }
+    let str = '';
+    const billion = Math.floor(num / 1000000000); let r = num % 1000000000;
+    const million = Math.floor(r / 1000000); r %= 1000000;
+    const thousand = Math.floor(r / 1000); r %= 1000;
+    if (billion > 0) str += makeWords(billion) + ' Billion ';
+    if (million > 0) str += makeWords(million) + ' Million ';
+    if (thousand > 0) str += makeWords(thousand) + ' Thousand ';
+    if (r > 0) str += makeWords(r);
+    return str.trim();
+}
+</script>
+
+</body>
+</html>

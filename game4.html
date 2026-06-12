@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hungry Math Frog</title>
+    <style>
+        #game-wrapper {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            text-align: center;
+            max-width: 650px;
+            margin: 20px auto;
+            user-select: none;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 20px;
+            position: relative;
+        }
+        
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+        }
+
+        .start-btn {
+            padding: 18px 35px;
+            font-size: 24px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px #2e7d32;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .start-btn:hover { background: #45a049; transform: scale(1.05); }
+
+        #stage {
+            position: relative;
+            height: 160px;
+            border-bottom: 4px solid #555;
+            margin-top: 20px;
+        }
+
+        .grid-line {
+            position: absolute;
+            top: 10px; bottom: 0;
+            width: 2px;
+            background: #eee;
+            z-index: 1;
+        }
+
+        #labels-container {
+            position: relative;
+            height: 40px;
+            margin-top: 10px;
+        }
+        .number-label {
+            position: absolute;
+            transform: translateX(-50%);
+            font-weight: bold;
+            font-size: 20px;
+            color: #333;
+        }
+
+        #frog {
+            position: absolute;
+            bottom: 0px;
+            font-size: 55px;
+            width: 60px; height: 60px;
+            display: flex; align-items: center; justify-content: center;
+            transition: left 0.7s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+            z-index: 10;
+            left: 0%;
+        }
+        #insect {
+            position: absolute;
+            bottom: 15px;
+            font-size: 38px;
+            z-index: 5;
+            transform: translateX(-50%);
+            transition: opacity 0.3s;
+        }
+
+        @keyframes jumpArc {
+            0% { bottom: 0px; }
+            50% { bottom: 110px; }
+            100% { bottom: 0px; }
+        }
+        .is-jumping { animation: jumpArc 0.7s ease-in-out; }
+        
+        @keyframes flyAway {
+            0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -140px) scale(2); opacity: 0; }
+        }
+        .is-escaping { animation: flyAway 0.8s forwards; }
+
+        @keyframes gulp {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+        }
+        .is-eating { animation: gulp 0.3s 2; }
+
+        .ui-panel { margin-bottom: 15px; font-size: 19px; background: #f9f9f9; padding: 10px; border-radius: 10px; }
+        .options-row { 
+            display: flex; justify-content: center; 
+            gap: 15px; margin-top: 30px; min-height: 70px;
+        }
+        .math-btn {
+            padding: 14px 22px; font-size: 22px; font-weight: bold;
+            cursor: pointer; background: #2196F3; color: white;
+            border: none; border-radius: 12px; box-shadow: 0 4px #1976D2;
+        }
+        .math-btn:active { transform: translateY(2px); box-shadow: 0 2px #1976D2; }
+        
+        #feedback { margin-top: 10px; font-weight: bold; font-size: 1.3em; height: 35px; }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <div id="start-screen">
+        <h1 style="color: #2e7d32; margin-bottom: 5px;">🐸 Frog Jump Math!</h1>
+        <p style="color: #555555; margin-bottom: 20px;">Can you catch 10 insects?</p>
+        <button class="start-btn" onclick="startGame()">START GAME</button>
+    </div>
+
+    <div class="ui-panel">
+        <strong>Level:</strong> 
+        <select id="level" onchange="resetGame()" style="font-size: 17px; padding: 3px;">
+            <option value="1">➕ Addition &amp; Subtraction</option>
+            <option value="2">✖️ Multiplication &amp; Division</option>
+        </select>
+        &nbsp; | &nbsp; <strong>Caught:</strong> <span id="score">0</span>/10
+    </div>
+
+    <div id="stage">
+        <div id="frog">🐸</div>
+        <div id="insect">🪰</div>
+    </div>
+    
+    <div id="labels-container"></div>
+    <div id="feedback"></div>
+    <div class="options-row" id="buttons-box"></div>
+</div>
+
+<script>
+    let score = 0;
+    let target = 0;
+    const frog = document.getElementById('frog');
+    const insect = document.getElementById('insect');
+    const stage = document.getElementById('stage');
+    const labels = document.getElementById('labels-container');
+    const startScreen = document.getElementById('start-screen');
+
+    for(let i=0; i<=10; i++) {
+        let xPos = (i * 10) + "%";
+        const line = document.createElement('div');
+        line.className = 'grid-line';
+        line.style.left = xPos;
+        stage.appendChild(line);
+
+        const lbl = document.createElement('div');
+        lbl.className = 'number-label';
+        lbl.style.left = xPos;
+        lbl.innerText = i;
+        labels.appendChild(lbl);
+    }
+
+    function startGame() {
+        startScreen.style.display = 'none';
+        resetGame();
+    }
+
+    function createProblem(goal, lvl) {
+        if(lvl === "1") {
+            if(Math.random() > 0.5) {
+                let a = Math.floor(Math.random() * (goal + 1));
+                return `${a} + ${goal - a}`;
+            } else {
+                let r = Math.floor(Math.random() * 3) + 1;
+                return `${goal + r} - ${r}`;
+            }
+        } else {
+            if(Math.random() > 0.5 && goal !== 0) {
+                let factors = [];
+                for(let i=1; i<=goal; i++) if(goal % i === 0) factors.push(i);
+                let f = factors[Math.floor(Math.random() * factors.length)];
+                let other = goal / f;
+                return `${f} &times; ${other}`;
+            } else {
+                let m = Math.floor(Math.random() * 2) + 1;
+                return `${goal * m} &divide; ${m}`;
+            }
+        }
+    }
+
+    function startRound() {
+        if (score >= 10) {
+            document.getElementById('feedback').innerHTML = "🌟 YOU ARE A MATH GENIUS! 🌟";
+            document.getElementById('buttons-box').innerHTML = '<button class="math-btn" style="background:#ff9800; box-shadow: 0 4px #e68a00;" onclick="location.reload()">Play Again</button>';
+            return;
+        }
+
+        const currentLvl = document.getElementById('level').value;
+        target = Math.floor(Math.random() * 11);
+        
+        insect.className = "";
+        insect.style.opacity = "1";
+        insect.style.left = (target * 10) + "%";
+
+        let correct = createProblem(target, currentLvl);
+        let options = [correct];
+        
+        while(options.length < 3) {
+            let fTarget = Math.floor(Math.random() * 11);
+            if(fTarget === target) continue;
+            let fProb = createProblem(fTarget, currentLvl);
+            if(!options.includes(fProb)) options.push(fProb);
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        const btnBox = document.getElementById('buttons-box');
+        btnBox.innerHTML = '';
+        options.forEach(opt => {
+            const b = document.createElement('button');
+            b.className = "math-btn";
+            b.innerHTML = opt;
+            b.onclick = () => verify(opt, correct);
+            btnBox.appendChild(b);
+        });
+    }
+
+    function verify(selected, correct) {
+        const fb = document.getElementById('feedback');
+        if(selected === correct) {
+            fb.innerHTML = "Fantastic! 🐸✨";
+            fb.style.color = "#2e7d32";
+            frog.classList.add('is-jumping');
+            frog.style.left = `calc(${(target * 10)}% - 30px)`;
+            
+            setTimeout(() => {
+                frog.classList.remove('is-jumping');
+                insect.style.opacity = "0";
+                frog.classList.add('is-eating');
+                setTimeout(() => {
+                    frog.classList.remove('is-eating');
+                    score++;
+                    document.getElementById('score').innerText = score;
+                    startRound();
+                }, 800);
+            }, 600);
+        } else {
+            fb.innerHTML = "Oh no! He flew away! ☁️";
+            fb.style.color = "#d32f2f";
+            insect.classList.add('is-escaping');
+            setTimeout(startRound, 1000);
+        }
+    }
+
+    function resetGame() {
+        score = 0;
+        document.getElementById('score').innerText = "0";
+        document.getElementById('feedback').innerText = "";
+        frog.style.left = "calc(0% - 30px)";
+        startRound();
+    }
+</script>
+
+</body>
+</html>

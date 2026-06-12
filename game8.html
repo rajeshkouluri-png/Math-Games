@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Math Battle: Cartoon Edition</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    /* --- LAYOUT STYLES --- */
+    #game-container {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+      background-color: #ffffff;
+      padding: 10px;
+      text-align: center;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* Dashboard */
+    .scoreboard {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .player-card {
+      flex: 1;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 3px solid #e0e0e0;
+      transition: all 0.3s;
+      opacity: 0.7;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .player-card.active-p1 { border-color: #e74c3c; background-color: #fadbd8; opacity: 1; transform: scale(1.02); }
+    .player-card.active-p2 { border-color: #3498db; background-color: #d6eaf8; opacity: 1; transform: scale(1.02); }
+
+    .timer-display {
+      font-size: 28px;
+      font-weight: bold;
+      font-family: monospace;
+      display: block;
+      margin-top: 5px;
+    }
+    
+    .p1-color { color: #c0392b; font-weight: 800; }
+    .p2-color { color: #2980b9; font-weight: 800; }
+
+    /* Controls */
+    .controls {
+      margin-bottom: 15px;
+      padding: 15px;
+      background: #f1f3f5;
+      border-radius: 12px;
+      border: 1px solid #dee2e6;
+    }
+    select { padding: 8px; font-size: 14px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    
+    button#start-btn {
+      background-color: #27ae60; 
+      color: white; 
+      border: none; 
+      font-weight: bold; 
+      cursor: pointer; 
+      padding: 10px 30px;
+      font-size: 16px;
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+    button#start-btn:hover { background-color: #219150; }
+
+    /* Battle Arena */
+    .arena {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .player-section { flex: 1; position: relative; }
+
+    /* PUZZLE WRAPPER */
+    .puzzle-wrapper {
+      position: relative;
+      width: 100%;
+      /* Aspect Ratio: 3 columns / 4 rows = 0.75 */
+      aspect-ratio: 3 / 4; 
+      border-radius: 8px;
+      overflow: hidden;
+      background: #eee;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .secret-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill; 
+      display: block;
+      z-index: 1;
+    }
+
+    /* Grid Overlay */
+    .grid-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); 
+      grid-template-rows: repeat(4, 1fr);   
+      z-index: 2;
+    }
+
+    .grid-cell {
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.8);
+      cursor: pointer;
+      font-weight: bold;
+      padding: 2px;
+      transition: all 0.2s;
+      background-color: #95a5a6;
+      user-select: none;
+      overflow: hidden; 
+      word-wrap: break-word; 
+    }
+    
+    .grid-cell { font-size: clamp(14px, 3vw, 20px); }
+
+    .grid-cell.text-mode { 
+      font-size: clamp(10px, 2vw, 13px) !important; 
+      line-height: 1.1; 
+      padding: 1px;
+    }
+    
+    .active-game .p1-grid .grid-cell { background-color: #e74c3c; } 
+    .active-game .p1-grid .grid-cell:hover { background-color: #c0392b; }
+    
+    .active-game .p2-grid .grid-cell { background-color: #3498db; } 
+    .active-game .p2-grid .grid-cell:hover { background-color: #2980b9; }
+
+    .grid-cell.revealed { opacity: 0; pointer-events: none; }
+
+    /* Modal */
+    #answer-modal {
+      display: none;
+      position: absolute;
+      top: 40%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 85%;
+      max-width: 300px;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border-radius: 12px;
+      z-index: 100;
+      text-align: center;
+      border: 2px solid #34495e;
+    }
+    #modal-question { font-size: 22px; margin-bottom: 15px; display: block; color: #333; }
+    #modal-input { width: 70%; padding: 8px; font-size: 18px; text-align: center; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 5px; }
+    #modal-submit { background: #27ae60; color: white; border: none; padding: 8px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; }
+    
+    /* Winner Overlay */
+    #winner-overlay {
+      position: absolute; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.92);
+      color: #f1c40f;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      border-radius: 8px;
+    }
+    #winner-overlay h2 { font-size: 30px; margin: 0; }
+    #winner-overlay p { color: white; font-size: 18px; margin-top: 10px; }
+    #winner-overlay button { margin-top: 20px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
+
+    @media (max-width: 500px) {
+      .arena { gap: 5px; }
+      .scoreboard { gap: 5px; }
+      .timer-display { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  
+  <div class="controls">
+    <h3>Math Battle: Cartoon Edition</h3>
+    <select id="topic-select">
+      <option value="words">Number Names (0-999)</option>
+      <option selected="" value="mixed">Mixed Operations (+, -, x, ÷)</option>
+    </select>
+    
+    <select id="time-select">
+      <option value="60">60 Seconds</option>
+      <option selected="" value="90">90 Seconds</option>
+      <option value="120">120 Seconds</option>
+      <option value="150">150 Seconds</option>
+      <option value="180">180 Seconds</option>
+    </select>
+    <br />
+    <button id="start-btn" onclick="handleStartClick()">Start New Game</button>
+  </div>
+
+  <div class="scoreboard">
+    <div class="player-card" id="p1-card">
+      <div class="player-title p1-color">PLAYER 1</div>
+      <span class="timer-display" id="timer-p1">90.0</span>
+    </div>
+    <div class="player-card" id="p2-card">
+      <div class="player-title p2-color">PLAYER 2</div>
+      <span class="timer-display" id="timer-p2">90.0</span>
+    </div>
+  </div>
+
+  <div class="arena" id="arena-container">
+    <div class="player-section">
+      <div class="puzzle-wrapper">
+        <img alt="Cartoon" class="secret-image" id="img-p1" src="" />
+        <div class="grid-overlay p1-grid" id="grid-p1"></div>
+      </div>
+    </div>
+    
+    <div class="player-section">
+      <div class="puzzle-wrapper">
+        <img alt="Cartoon" class="secret-image" id="img-p2" src="" />
+        <div class="grid-overlay p2-grid" id="grid-p2"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="answer-modal">
+    <strong id="modal-question">Question</strong>
+    <input autocomplete="off" id="modal-input" placeholder="?" type="text" />
+    <br />
+    <button id="modal-submit">Submit</button>
+  </div>
+
+  <div id="winner-overlay">
+    <h2 id="winner-text">PLAYER 1 WINS!</h2>
+    <p id="winner-reason">Cleared grid first!</p>
+    <button onclick="document.getElementById('winner-overlay').style.display='none'">Close</button>
+  </div>
+
+</div>
+
+<script>
+  // --- CARTOON IMAGES ---
+  const cartoonImages = [
+    "https://blogger.googleusercontent.com/img/a/AVvXsEgmBFzB7bcuiJ3BYhLU8EG0zQ_1lmrSTJQss1U2uUJPdqSanEBBrkY_pdds4QL3WMw-T-4nq0MNNjJ4LzqrJ3r9Nmsp9YNKkZagWV31Ps_ZTB9kB5roYTIdm5vR024LIOp2GQ3s9JSVHvoaekR6WlZA03slaBXRNH7Jp7dac2DVa-OP1WRqyZCNRggPj6y-",
+    "https://blogger.googleusercontent.com/img/a/AVvXsEiFi8POikt58uXrP79dMkyozvVzvIwdcnNaRI0CvXhA98yRlmmV5ln8ebNa82ZYBnfW2-hTB2Pl-S_5IInACg6xbPfjOtXEu_rwJ1wZky9fvVtp5s9AQXSoPTI9UPBq8b_iDGoRgF73f-KpNF-5daa0GIwI6XE4Z3Il9yHxtaIty6Oy8gHAenMfe31bNwi7",
+    "https://blogger.googleusercontent.com/img/a/AVvXsEjEQzNRVOshZebganpIHbAMi_3AqoaN7KJGFq3eByN3p6YmpBN0pgMPYSaXwmWM6_CVwFcMvEhiDfTyIsUbEhQk7AYhMZG-c2ERoyY6WYJv9RPgbpyuVXL5R3Kcns3hB_B5f2cdYx88Gw7XUu10V8ibeaDVxhEogOAT82I9G1gLAEo32668lr_aZXz4EgzJ",
+    "https://blogger.googleusercontent.com/img/a/AVvXsEj7ZGiJS-NsXQrtJ2Q44ImCKYHzn1pD3LIvbk3nRbghHoLp9V-yWlVUXok5xKY0PGZrlFkBx-r6u1Ohr0AdsCsK7PKjK6g1WOb5Enz9RXkpIDDohjQZW5Vc89YzUXrmyHiNrx6Ny-8EBTaaEGm9VG_9IwcO1_alReZlgo-KJVdHBJp_TW2-KItr8xODYlzn",
+    "https://blogger.googleusercontent.com/img/a/AVvXsEgrpAzXMP54ONWkJ90zW-GisMCIgtb_OB9es4rEzU_k7u9S0P9Y4wyPRHYlrBY7T80vkmV4xGCcybg-SiNZyspcc9hZODLN4Yym9VSt7lWmwoub5Nf996_kjnWtEqcVAgmb7dxE6RbX8ZcEzMsHDMqkU7joxBtM1QFb9598nv_JzZ2G40xoXYesmsnEsQRs",
+    "https://blogger.googleusercontent.com/img/a/AVvXsEho8ULzHCZr03btQtW76KPIrXM_F8tRQAQ4yFA5VygYXta-3FLJiZzBsH4gQ9HQUD0bt5oaIypg2QPuYjwvC4IDlNhS87aPfOBprXQYepQ594UXwG6WURb7MLFX1TzPZVQG_dDKKpSJfUywxJW3q6sW6mOR7QmqFNq_vcauBVXM6qyby908F5ZZn8Z2w6lb"
+  ];
+
+  // --- CONFIG ---
+  const BLOCKS_COUNT = 12; 
+
+  // --- STATE ---
+  let currentPlayer = 1;
+  let gameActive = false;
+  let timerInterval = null;
+  let p1Time = 90; let p2Time = 90;
+  let p1Remaining = BLOCKS_COUNT; let p2Remaining = BLOCKS_COUNT;
+  let activeCell = null; 
+
+  // --- HELPERS ---
+  const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+  const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+
+  function numToWords(n) {
+    if (n === 0) return "zero";
+    let str = "";
+    if (n >= 100) { str += ones[Math.floor(n / 100)] + " hundred "; n %= 100; }
+    if (n >= 20) { str += tens[Math.floor(n / 10)] + " "; n %= 10; }
+    if (n >= 10) { str += teens[n - 10]; n = 0; }
+    if (n > 0) { str += ones[n]; }
+    return str.trim();
+  }
+
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  // --- QUESTION LOGIC ---
+  function generateQuestionSet(mode) {
+    let questions = [];
+    
+    if (mode === 'words') {
+      for(let i=0; i<BLOCKS_COUNT; i++) {
+        let num = getRandomInt(1, 999);
+        questions.push({ label: numToWords(num), answer: num.toString() });
+      }
+    } else if (mode === 'mixed') {
+      let types = [];
+      for(let i=0; i<4; i++) types.push('add');
+      for(let i=0; i<3; i++) types.push('sub');
+      for(let i=0; i<3; i++) types.push('mul');
+      for(let i=0; i<2; i++) types.push('div');
+      
+      types.sort(() => Math.random() - 0.5);
+
+      types.forEach(type => {
+        let q = "", a = 0;
+        if(type === 'add') {
+          let x = getRandomInt(10, 500); let y = getRandomInt(10, 500);
+          q = `${x} + ${y}`; a = x+y;
+        } else if (type === 'sub') {
+           let x = getRandomInt(50, 999); let y = getRandomInt(10, x);
+           q = `${x} - ${y}`; a = x-y;
+        } else if (type === 'mul') {
+          let x = getRandomInt(3, 15); let y = getRandomInt(3, 15);
+          q = `${x} x ${y}`; a = x*y;
+        } else if (type === 'div') {
+          let divisor = getRandomInt(2, 9); let result = getRandomInt(5, 50);
+          let dividend = result * divisor;
+          q = `${dividend} \u00F7 ${divisor}`; a = result;
+        }
+        questions.push({ label: q, answer: a.toString() });
+      });
+    }
+    return questions.slice(0, BLOCKS_COUNT);
+  }
+
+  // --- IMAGES ---
+  function loadRandomImage() {
+    const randomImgUrl = cartoonImages[Math.floor(Math.random() * cartoonImages.length)];
+    document.getElementById('img-p1').src = randomImgUrl;
+    document.getElementById('img-p2').src = randomImgUrl;
+  }
+
+  // --- TIMER ---
+  function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (!gameActive) return;
+      if (currentPlayer === 1) {
+        p1Time -= 0.1;
+        document.getElementById('timer-p1').innerText = Math.max(0, p1Time).toFixed(1);
+        if (p1Time <= 0) endGame(2, "Player 1 Time Up!");
+      } else {
+        p2Time -= 0.1;
+        document.getElementById('timer-p2').innerText = Math.max(0, p2Time).toFixed(1);
+        if (p2Time <= 0) endGame(1, "Player 2 Time Up!");
+      }
+    }, 100);
+  }
+
+  function stopTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+  }
+
+  // --- GAMEPLAY ---
+  function resetAndInit() {
+    stopTimer();
+    closeModal();
+    document.getElementById('winner-overlay').style.display = 'none';
+    document.getElementById('arena-container').classList.remove('active-game');
+    
+    const topic = document.getElementById('topic-select').value;
+    const initialTime = parseInt(document.getElementById('time-select').value);
+    
+    p1Time = initialTime; p2Time = initialTime;
+    p1Remaining = BLOCKS_COUNT; p2Remaining = BLOCKS_COUNT;
+    currentPlayer = 1;
+    gameActive = false;
+    
+    document.getElementById('timer-p1').innerText = p1Time.toFixed(1);
+    document.getElementById('timer-p2').innerText = p2Time.toFixed(1);
+    document.getElementById('p1-card').classList.remove('active-p1');
+    document.getElementById('p2-card').classList.remove('active-p2');
+
+    loadRandomImage();
+    let p1Q = generateQuestionSet(topic);
+    let p2Q = generateQuestionSet(topic);
+    renderGrid(1, p1Q, topic);
+    renderGrid(2, p2Q, topic);
+  }
+
+  function handleStartClick() {
+    resetAndInit();
+    gameActive = true;
+    document.getElementById('arena-container').classList.add('active-game');
+    updateTurnUI();
+    startTimer();
+  }
+
+  function renderGrid(playerNum, questions, mode) {
+    const gridId = playerNum === 1 ? 'grid-p1' : 'grid-p2';
+    const container = document.getElementById(gridId);
+    container.innerHTML = "";
+
+    questions.forEach((q) => {
+      let cell = document.createElement('div');
+      cell.classList.add('grid-cell');
+      
+      if (mode === 'words') {
+        cell.classList.add('text-mode');
+      }
+
+      cell.innerText = q.label;
+      cell.dataset.answer = q.answer;
+      
+      cell.addEventListener('click', function() {
+        if (!gameActive || cell.classList.contains('revealed')) return;
+        if (playerNum !== currentPlayer) return;
+        openModal(cell);
+      });
+      container.appendChild(cell);
+    });
+  }
+
+  function updateTurnUI() {
+    const p1Card = document.getElementById('p1-card');
+    const p2Card = document.getElementById('p2-card');
+    if (currentPlayer === 1) {
+      p1Card.classList.add('active-p1'); p2Card.classList.remove('active-p2');
+    } else {
+      p1Card.classList.remove('active-p1'); p2Card.classList.add('active-p2');
+    }
+  }
+
+  // --- MODAL ---
+  const modal = document.getElementById('answer-modal');
+  const input = document.getElementById('modal-input');
+  const submitBtn = document.getElementById('modal-submit');
+
+  function openModal(cell) {
+    activeCell = cell;
+    document.getElementById('modal-question').innerText = cell.innerText;
+    input.value = "";
+    modal.style.display = "block";
+    input.focus();
+  }
+
+  function closeModal() {
+    modal.style.display = "none";
+    activeCell = null;
+  }
+
+  submitBtn.onclick = checkAnswer;
+  input.addEventListener("keypress", function(e) { if (e.key === "Enter") checkAnswer(); });
+
+  function checkAnswer() {
+    if (!activeCell) return;
+    let userVal = input.value.trim().toLowerCase();
+    let correctVal = activeCell.dataset.answer.toLowerCase();
+
+    if (userVal === correctVal) {
+      activeCell.classList.add('revealed');
+      closeModal();
+      
+      if (currentPlayer === 1) p1Remaining--; else p2Remaining--;
+
+      if (p1Remaining === 0) endGame(1, "Cleared the grid!");
+      else if (p2Remaining === 0) endGame(2, "Cleared the grid!");
+      else switchTurn();
+    } else {
+      closeModal();
+      switchTurn();
+    }
+  }
+
+  function switchTurn() {
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+    updateTurnUI();
+  }
+
+  function endGame(winnerNum, reason) {
+    gameActive = false;
+    stopTimer();
+    document.getElementById('winner-text').innerText = `PLAYER ${winnerNum} WINS!`;
+    document.getElementById('winner-reason').innerText = reason;
+    document.getElementById('winner-overlay').style.display = 'flex';
+    document.getElementById('arena-container').classList.remove('active-game');
+
+    var duration = 3000; var animationEnd = Date.now() + duration;
+    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 300 };
+    var interval = setInterval(function() {
+      var timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) return clearInterval(interval);
+      var particleCount = 50 * (timeLeft / duration);
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: 0.1, y: 0.6 } }));
+      confetti(Object.assign({}, defaults, { particleCount, origin: { x: 0.9, y: 0.6 } }));
+    }, 250);
+  }
+
+  resetAndInit();
+</script>
+</body>
+</html>

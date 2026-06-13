@@ -2,30 +2,40 @@
 <html lang="te">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Math Games Hub</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #eef8ff;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
             -webkit-user-select: none;
             user-select: none;
         }
 
         h1 {
             color: #2b2d42;
-            font-size: 24px;
-            margin-bottom: 25px;
+            font-size: 22px;
+            margin-top: 10px;
+            margin-bottom: 20px;
             text-align: center;
             background: #fff;
-            padding: 10px 20px;
+            padding: 12px 25px;
             border-radius: 30px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 450px;
         }
 
         .grid-container {
@@ -34,7 +44,7 @@
             gap: 15px;
             width: 100%;
             max-width: 450px;
-            padding-bottom: 40px;
+            padding-bottom: 30px;
         }
 
         .game-box {
@@ -45,13 +55,14 @@
             align-items: center;
             justify-content: center;
             aspect-ratio: 1 / 1;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-            transition: transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
             cursor: pointer;
         }
 
         .game-box:active {
             transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .game-box span {
@@ -66,7 +77,7 @@
             text-align: center;
         }
 
-        /* క్యాండీ కలర్స్ */
+        /* క్యాండీ కలర్స్ (Candy Colors) */
         .color1 { background-color: #ff477e; color: white; }
         .color2 { background-color: #4cc9f0; color: white; }
         .color3 { background-color: #ffb703; color: white; }
@@ -84,52 +95,52 @@
     <h1>Math Games Hub 🔢</h1>
 
     <div class="grid-container">
-        <a href="game1/index.html" class="game-box color1">
+        <a href="game1.html" class="game-box color1">
             <span>🎮</span>
             <p>Game 1</p>
         </a>
 
-        <a href="game2/index.html" class="game-box color2">
+        <a href="game2.html" class="game-box color2">
             <span>🎲</span>
             <p>Game 2</p>
         </a>
 
-        <a href="game3/index.html" class="game-box color3">
+        <a href="game3.html" class="game-box color3">
             <span>🧩</span>
             <p>Game 3</p>
         </a>
 
-        <a href="game4/index.html" class="game-box color4">
+        <a href="game4.html" class="game-box color4">
             <span>🎯</span>
             <p>Game 4</p>
         </a>
 
-        <a href="game5/index.html" class="game-box color5">
+        <a href="game5.html" class="game-box color5">
             <span>🚀</span>
             <p>Game 5</p>
         </a>
 
-        <a href="game6/index.html" class="game-box color6">
+        <a href="game6.html" class="game-box color6">
             <span>🎈</span>
             <p>Game 6</p>
         </a>
 
-        <a href="game7/index.html" class="game-box color7">
+        <a href="game7.html" class="game-box color7">
             <span>⭐</span>
             <p>Game 7</p>
         </a>
 
-        <a href="game8/index.html" class="game-box color8">
+        <a href="game8.html" class="game-box color8">
             <span>🦄</span>
             <p>Game 8</p>
         </a>
 
-        <a href="game9/index.html" class="game-box color9">
+        <a href="game9.html" class="game-box color9">
             <span>🦁</span>
             <p>Game 9</p>
         </a>
 
-        <a href="game10/index.html" class="game-box color10">
+        <a href="game10.html" class="game-box color10">
             <span>💎</span>
             <p>Game 10</p>
         </a>
@@ -137,3 +148,4 @@
 
 </body>
 </html>
+
